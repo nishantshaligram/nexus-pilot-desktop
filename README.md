@@ -1,15 +1,27 @@
-# Project NexusPilot: Universal Desktop Computer-Use Plugin & MCP Suite
-## Ideation, Architectural Blueprint & Implementation Specification
+# Project NexusPilot
 
-> **Version:** 1.0.0-PROPOSAL • **Status:** Approved for Ideation • **Target Ecosystem:** Antigravity, Claude Code, Cursor, Windsurf
+<p align="center">
+  <img src="nexus-pilot/assets/logo.svg" width="128" height="128" alt="NexusPilot Logo" />
+</p>
+
+<p align="center">
+  <strong>Universal Desktop Computer-Use MCP Suite & Antigravity Plugin</strong><br />
+  <em>Empower AI agents with human-grade vision, mouse actuation, keyboard input, and Windows UI Automation.</em>
+</p>
+
+<p align="center">
+  <a href="https://github.com/nishantshaligram/NexusPilot/actions"><img src="https://img.shields.io/github/actions/workflow/status/nishantshaligram/NexusPilot/ci.yml?branch=main&label=CI&logo=github" alt="CI Status" /></a>
+  <a href="https://nishantshaligram.github.io/NexusPilot/"><img src="https://img.shields.io/badge/Docs-MkDocs%20Material-00D2FF?logo=materialformkdocs" alt="Documentation" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License: Apache 2.0" /></a>
+  <img src="https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6?logo=windows" alt="Platform: Windows" />
+  <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python" alt="Python 3.10+" />
+</p>
 
 ---
 
-## 1. Executive Summary & Core Thesis
+## Architecture Overview
 
-Modern AI coding agents excel at manipulating text, executing CLI commands, and reading local file trees. However, they hit a hard boundary when interacting with **native desktop software**—such as IDEs (Visual Studio, Xcode), database thick clients (DBeaver, TablePlus), design tools (Figma Desktop), local emulators, enterprise ERPs, and Windows management consoles.
-
-**Project NexusPilot** is an open, modular **Desktop Human-Grade Automation Suite** delivered as a cross-compatible **Model Context Protocol (MCP) Server** and an **Antigravity Plugin + Skill**. It provides AI agents with human-like vision, mouse control, keyboard input, and OS accessibility perception, allowing them to operate any desktop software without requiring custom API integration.
+NexusPilot bridges the gap between text-native coding agents and native Windows software (IDEs, database clients, Figma Desktop, settings consoles) using **Dual-Modal Perception** and **Win32 `SendInput` Kinematics**:
 
 ```mermaid
 flowchart TD
@@ -20,171 +32,97 @@ flowchart TD
     end
 
     subgraph PluginLayer["NexusPilot Plugin & Skill Layer"]
-        B1["SKILL.md (Observation & Action Planning)"]
-        B2["Safety Rules & Guardrail Checks"]
+        B1["SKILL.md (Observe-Plan-Act-Verify)"]
+        B2["Safety Guardrails & Boundary Checks"]
     end
 
-    subgraph MCPServer["NexusPilot MCP Engine (Local Daemon)"]
-        C1["Tool Dispatcher (JSON-RPC)"]
-        C2["Perception Engine (MSS / UIA Tree)"]
-        C3["Actuation Engine (Win32 SendInput / Bézier Kinematics)"]
-        C4["Failsafe Guardian (Corner Abort / Rate Limiter)"]
+    subgraph MCPEngine["NexusPilot MCP Engine (Local Daemon)"]
+        C1["Tool Dispatcher (JSON-RPC 2.0 stdio)"]
+        C2["Perception Engine (MSS / DWM Window Cropping)"]
+        C3["Semantic Engine (Windows UI Automation COM)"]
+        C4["Actuation Engine (Win32 SendInput / DPI V2)"]
+        C5["Failsafe Guardian (Corner Slam / Boundary Lock)"]
     end
 
-    subgraph WindowsOS["Host Operating System (Windows / macOS / Linux)"]
+    subgraph WindowsOS["Host Operating System (Windows 10 / 11)"]
         D1["Display Surfaces & Window Handles (HWND)"]
         D2["Mouse & Keyboard Event Queue"]
-        D3["UI Automation Accessibility Core"]
+        D3["UI Automation Core (UIAutomationCore.dll)"]
     end
 
     AgentLayer --> PluginLayer
-    PluginLayer --> MCPServer
-    MCPServer --> WindowsOS
+    PluginLayer --> MCPEngine
+    MCPEngine --> WindowsOS
 ```
 
 ---
 
-## 2. Key Limitations Solved
+## Key Features
 
-| Traditional Approach | Key Limitation | NexusPilot Solution |
+1. **Dual-Modal Perception**:
+   - **Semantic Stream**: Interfaces with `UIAutomationCore.dll` via typed COM to extract interactive controls (Buttons, Text boxes, Menus) with exact pixel bounding boxes.
+   - **Visual Stream**: Sub-30ms hardware screen capture with DWM extended frame bounds (eliminating invisible 7px drop shadow margins) and targeted window cropping.
+2. **Per-Monitor DPI v2 Normalized Actuation**:
+   - Dispatches mouse and keyboard events using native Win32 `SendInput`.
+   - Immune to multi-monitor coordinate drift across 100%, 125%, 150%, and 200% display scaling.
+3. **Safety Guardian & Failsafes**:
+   - **Hardware Corner Failsafe**: Slamming the physical mouse cursor into `(0, 0)` immediately halts all automation.
+   - **Application Boundary Isolation**: Restricts clicks strictly to authorized target window rectangles.
+   - **Destructive Action Gates**: Detects high-risk operations (e.g. `format`, `drop table`, `rm -rf`) and triggers human confirmation.
+4. **Universal Agent Compatibility**:
+   - Implements standard Model Context Protocol (MCP).
+   - Bundles native plugin integration for **Google Antigravity**, **Claude Code**, **Claude Desktop**, **Cursor**, and **Windsurf**.
+
+---
+
+## 1-Click Quickstart
+
+### 1. Install Dependencies & Configure Agents
+Run the universal installer from PowerShell:
+```powershell
+powershell -ExecutionPolicy Bypass -File nexus-pilot/scripts/install-agents.ps1
+```
+*(Or double-click `nexus-pilot/install-agents.bat` in Windows Explorer).*
+
+### 2. Verify Your Environment
+```powershell
+powershell -ExecutionPolicy Bypass -File nexus-pilot/scripts/verify-environment.ps1
+```
+
+### 3. Run Automated Tests
+```powershell
+python nexus-pilot/tests/test_pilot.py
+```
+
+---
+
+## MCP Tools Reference
+
+| Tool | Parameters | Description |
 |---|---|---|
-| **API-Only Integration** | Most desktop apps lack comprehensive local REST/RPC APIs. | Universal surface interaction via mouse, keyboard, and visual perception. |
-| **Pure Pixel Guessing (Vision LLM)** | High hallucination rate, breaks on Windows DPI scaling (125%/150%), misses small icons. | **Dual-Modal Perception**: Combines high-resolution screenshots with the **Windows UI Automation (UIA) accessibility tree** for 100% coordinate precision. |
-| **Vendor Lock-in** | Proprietary "Computer Use" implementations locked into single vendor cloud containers. | Runs 100% locally on developer workstations over the open **Model Context Protocol (MCP)**. |
-| **Unsafe Automation** | Rogue clicks, accidental closing of unsaved files, or loss of user control. | Hardware failsafe: Corner slamming, human override hotkeys, and bounded application focus locking. |
+| `capture_screen` | `monitor_index`, `window_title`, `crop_rect`, `max_dimension` | Captures high-res desktop or window screenshot as base64 PNG with DPI scale. |
+| `inspect_ui_tree` | `window_title`, `max_depth`, `interactive_only` | Traverses the Windows UI Automation accessibility tree to return controls with coordinates. |
+| `find_element` | `query`, `window_title` | Searches for a specific control by name, label, or automation ID. |
+| `click_element` | `query`, `window_title`, `button`, `clicks` | Deterministically clicks a control by semantic name with automatic window focus. |
+| `mouse_click` | `x`, `y`, `button`, `clicks` | Sends low-level Win32 `SendInput` mouse clicks. |
+| `mouse_drag` | `start_x`, `start_y`, `end_x`, `end_y`, `speed_ms` | Performs mouse drag-and-drop gestures with smoothed trajectory. |
+| `mouse_scroll` | `direction`, `amount`, `x`, `y` | Dispatches mouse wheel scroll events. |
+| `send_keystrokes` | `text`, `keys`, `delay_ms` | Sends Unicode character typing or keyboard hotkey chords (e.g. `['ctrl', 'shift', 'p']`). |
+| `focus_window` | `title_keyword` | Restores and brings window to foreground using Win32 thread input handshake. |
+| `get_active_window` | *(none)* | Returns currently focused application window title, HWND, PID, rect, and DPI scale. |
+| `set_safety_boundary` | `enabled`, `hwnd` | Locks click actuation exclusively within target window bounding box. |
+| `reset_safety_failsafe` | *(none)* | Resets emergency corner abort flag. |
+| `check_health` | *(none)* | Verifies screen metrics, cursor position, UIA COM status, and active safety guards. |
 
 ---
 
-## 3. System Architecture & Core Modules
+## Documentation
 
-### 3.1 Dual-Modal Perception Engine
-Rather than relying solely on raw vision (which is computationally expensive and coordinate-fragile), NexusPilot implements a dual-stream perception pipeline:
-
-1. **Visual Stream (Screen Capture)**:
-   - Uses sub-30ms capture libraries (`mss` or Windows DXGI Desktop Duplication API).
-   - Handles multi-monitor setups, DPI scaling factors, and specific window-bounding boxes.
-   - Compresses captures with smart region-of-interest cropping to reduce LLM token overhead.
-2. **Semantic Stream (Windows UI Automation / Accessibility)**:
-   - Queries `UIAutomationCore.dll` to inspect native controls (buttons, menus, text inputs, combo boxes).
-   - Extracts exact bounding boxes: `{ "type": "Button", "label": "Save Changes", "rect": [420, 680, 120, 36] }`.
-   - Allows the agent to click targeted controls by semantic name rather than blind pixel estimation.
-
-### 3.2 Human-Grade Actuation Engine
-Native OS events are generated using low-level Win32 `SendInput` hooks:
-- **Mouse Dynamics**:
-  - `click(x, y, button='left'|'right'|'middle', count=1|2)`
-  - `drag_and_drop(from_x, from_y, to_x, to_y, duration_ms)`
-  - `scroll(direction='up'|'down', amount, x, y)`
-  - Optional smoothed Bézier curve trajectories to prevent triggering anti-bot or rapid-jitter UI bugs.
-- **Keyboard Dynamics**:
-  - `type_text(string, wpm_delay)` with full Unicode character code support.
-  - `hotkey(combo)`: Handles complex modifier chords (e.g. `Ctrl+Shift+P`, `Alt+F4`, `Win+R`).
-- **Window Management**:
-  - `focus_window(title_or_pid)`: Brings target software to foreground prior to action execution.
-  - `get_active_window()`: Verifies the correct application is receiving inputs.
-
-### 3.3 The Self-Correcting Verification Loop
-Every agent action executes under an **Observe → Plan → Act → Verify** cycle:
-1. **Pre-Action Snapshot**: Capture state $S_0$ and focused window.
-2. **Execution**: Fire atomic action (e.g., Click Button `0x004F`).
-3. **Post-Action Snapshot**: Capture state $S_1$ after a calibrated UI settling delay (50–150ms).
-4. **Delta Verification**: If the expected UI change did not occur (e.g., dialog remains open), the agent receives immediate feedback to recalibrate or escalate.
+Full documentation, architecture specifications, and agent guides are available at:
+👉 **[https://nishantshaligram.github.io/NexusPilot/](https://nishantshaligram.github.io/NexusPilot/)**
 
 ---
 
-## 4. MCP Tool Specification (The Universal Interface)
+## License
 
-The MCP server exposes the following standardized tools across stdio/SSE:
-
-```typescript
-// MCP Tool Definitions
-interface DesktopPilotTools {
-  // Perception
-  capture_screen: {
-    args: { monitor_index?: number; window_title?: string; crop_rect?: [number, number, number, number] };
-    returns: { image_base64: string; width: number; height: number; dpi_scale: number };
-  };
-
-  inspect_ui_tree: {
-    args: { window_title?: string; max_depth?: number };
-    returns: { elements: Array<{ id: string; name: string; control_type: string; rect: number[] }> };
-  };
-
-  // Actuation
-  mouse_click: {
-    args: { x: number; y: number; button?: 'left' | 'right' | 'middle'; clicks?: number };
-    returns: { success: boolean; cursor_position: [number, number] };
-  };
-
-  mouse_drag: {
-    args: { start_x: number; start_y: number; end_x: number; end_y: number; speed_ms?: number };
-    returns: { success: boolean };
-  };
-
-  send_keystrokes: {
-    args: { text?: string; keys?: string[]; delay_ms?: number };
-    returns: { success: boolean };
-  };
-
-  focus_window: {
-    args: { title_keyword: string };
-    returns: { success: boolean; window_title: string; hwnd: number };
-  };
-}
-```
-
----
-
-## 5. Antigravity Plugin & Skill Bundle Structure
-
-When authored as an Antigravity plugin, the project is structured as follows:
-
-```text
-desktop-pilot/
-├── plugin.json                       # Plugin descriptor, author metadata, permissions
-├── mcp_config.json                   # Local MCP daemon bootstrap command
-├── skills/
-│   └── desktop-human-pilot/
-│       ├── SKILL.md                  # LLM reasoning strategy, pre-flight checks, error recovery
-│       └── references/
-│           ├── windows_hotkeys.md    # Standard keyboard shortcut library
-│           └── uia_selectors.md      # UI Automation selector patterns
-├── rules/
-│   └── desktop_safety_guardrails.md  # Restricted areas, emergency stops, confirmation gates
-├── server/
-│   ├── pilot_server.py               # FastMCP Python server implementation
-│   ├── uia_bridge.py                 # Windows UIAutomation COM interop
-│   ├── input_synthesizer.py          # Win32 SendInput / mouse kinematics
-│   └── requirements.txt              # pyautogui, mss, pywinauto, mcp[cli]
-└── scripts/
-    ├── install-service.ps1           # Windows local service installer
-    └── verify-environment.ps1        # DPI and accessibility permission probe
-```
-
----
-
-## 6. Safety Guardrails & Human-in-the-Loop Safeguards
-
-1. **Hardware Corner Failsafe**: Slamming the physical mouse into any corner (e.g. `(0, 0)`) immediately pauses all agent automation and releases OS hooks.
-2. **Panic Key Interrupt**: `Ctrl + Alt + Escape` immediately kills the active MCP tool process.
-3. **Application Boundary Guard**: Restricts mouse clicks exclusively within the bounding rectangle of the authorized application window (prevents clicking outside into personal messaging apps, browser tabs, or system trays).
-4. **High-Risk Confirmation Gates**: Any action targeting irreversible buttons (`Format`, `Delete Database`, `Authorize Payment`, `Commit to Production`) prompts the user for explicit Human-in-the-Loop (HITL) approval.
-
----
-
-## 7. Phased Implementation Roadmap
-
-```mermaid
-flowchart LR
-    P1["Phase 1: Foundation\n• Python FastMCP Server\n• Win32 SendInput\n• Sub-30ms MSS capture"]
-    P2["Phase 2: Semantic Vision\n• Windows UIA COM bridge\n• Element bounding boxes\n• DPI coordinate normalizer"]
-    P3["Phase 3: Antigravity Plugin\n• SKILL.md reasoning prompts\n• plugin.json & mcp_config\n• Cross-agent configs"]
-    P4["Phase 4: Advanced Operator\n• Multi-monitor support\n• Video-delta compression\n• OCR fallback engine"]
-
-    P1 --> P2 --> P3 --> P4
-```
-
-- **Phase 1 (MVP)**: Basic screenshot and coordinate-based mouse/keyboard MCP server.
-- **Phase 2 (Reliability)**: Windows UI Automation tree parser for deterministic, resolution-independent button clicking.
-- **Phase 3 (Packaging)**: Bundling into an installable Antigravity plugin and publishing MCP setup guides for Claude Code and Cursor.
-- **Phase 4 (Enterprise)**: Multi-monitor workspace awareness, optical character recognition (OCR) fallbacks for custom canvas controls, and macro recording.
+This project is licensed under the [Apache License, Version 2.0](LICENSE).
