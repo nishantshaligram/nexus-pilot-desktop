@@ -1,0 +1,22 @@
+{
+  "name": "nexus-pilot",
+  "version": "1.0.0",
+  "description": "Universal Desktop Computer-Use Plugin & MCP Suite for Windows. Provides human-grade vision, mouse, keyboard, and Windows UI Automation control.",
+  "author": "Project NexusPilot",
+  "homepage": "https://github.com/Personal/ComputerUse",
+  "keywords": [
+    "computer-use",
+    "mcp",
+    "windows",
+    "automation",
+    "desktop",
+    "accessibility",
+    "uia"
+  ],
+  "mcpServers": {
+    "nexus-pilot": {
+      "command": "python",
+      "args": ["${pluginDir}/server/pilot_server.py"]
+    }
+  }
+}
