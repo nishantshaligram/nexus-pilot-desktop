@@ -1,7 +1,7 @@
 # Project NexusPilot
 
 <p align="center">
-  <img src="nexus-pilot/assets/logo.svg" width="128" height="128" alt="NexusPilot Logo" />
+  <img src="docs/assets/brand_logo.jpg" width="460" alt="Project NexusPilot Banner" />
 </p>
 
 <p align="center">

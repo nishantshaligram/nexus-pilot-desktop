@@ -7,6 +7,8 @@ repo_name: nishantshaligram/NexusPilot
 
 theme:
   name: material
+  logo: assets/logo.svg
+  favicon: assets/icon_mark.jpg
   palette:
     - scheme: slate
       primary: cyan

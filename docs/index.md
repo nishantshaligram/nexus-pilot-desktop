@@ -1,5 +1,9 @@
 # Project NexusPilot
 
+<p align="center">
+  <img src="assets/brand_logo.jpg" width="460" alt="NexusPilot Logo" />
+</p>
+
 **NexusPilot** is an open-source, modular **Desktop Human-Grade Automation Suite** delivered as a cross-compatible **Model Context Protocol (MCP) Server** and an **Antigravity Plugin + Skill**.
 
 It provides AI agents with human-like vision, mouse control, keyboard input, and native Windows accessibility perception, enabling autonomous operation of native desktop software.
