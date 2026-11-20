@@ -1,0 +1,29 @@
+# NexusPilot: Universal Desktop Computer-Use MCP Suite
+
+> NexusPilot is an open-source, modular Desktop Human-Grade Automation Suite delivered as a cross-compatible Model Context Protocol (MCP) Server and an Antigravity Plugin + Skill. It gives AI coding agents (Google Antigravity, Claude Code, Cursor, Windsurf) human-like vision, mouse control, keyboard input, and native Windows accessibility perception.
+
+## Core Capabilities
+- **Dual-Modal Perception**: Combines sub-30ms hardware screen capture (MSS with DWM extended frame bounds) with typed Windows UI Automation (UIAutomationCore.dll) COM inspection for deterministic element coordinates.
+- **Native Actuation Engine**: Dispatches Win32 SendInput mouse and keyboard events normalized for Per-Monitor DPI Awareness v2.
+- **Hardware Failsafe**: Slamming the physical mouse cursor into (0, 0) immediately pauses all agent automation.
+- **Application Boundary Isolation**: Enforces click restrictions strictly within target window handles.
+- **Standard MCP Protocol**: Exposes 13 standardized tools over JSON-RPC 2.0 stdio.
+
+## Documentation Index
+- [Overview](https://nishantshaligram.github.io/NexusPilot/): Project vision, key limitations solved, and architecture diagram.
+- [Installation Guide](https://nishantshaligram.github.io/NexusPilot/getting-started/installation/): Step-by-step setup using the 1-click PowerShell installer or pip.
+- [Quickstart Guide](https://nishantshaligram.github.io/NexusPilot/getting-started/quickstart/): Testing the health probe and executing desktop workflows.
+- [Dual-Modal Perception](https://nishantshaligram.github.io/NexusPilot/architecture/dual-modal/): How UI Automation COM extraction eliminates coordinate hallucination.
+- [Win32 Actuation](https://nishantshaligram.github.io/NexusPilot/architecture/actuation/): Per-Monitor DPI v2 math, focus stealing prevention, and Bézier mouse kinematics.
+- [Safety Guardian](https://nishantshaligram.github.io/NexusPilot/architecture/safety/): Hardware corner failsafes, application locks, and destructive action gates.
+- [Google Antigravity Setup](https://nishantshaligram.github.io/NexusPilot/integrations/antigravity/): Native plugin and skill configuration.
+- [Claude Code & Desktop Setup](https://nishantshaligram.github.io/NexusPilot/integrations/claude/): MCP server configuration in ~/.claude.json.
+- [Cursor & Windsurf Setup](https://nishantshaligram.github.io/NexusPilot/integrations/cursor/): Adding NexusPilot as an MCP server.
+- [MCP Tools Reference](https://nishantshaligram.github.io/NexusPilot/reference/mcp-tools/): Complete argument and return schema for all 13 tools.
+- [Windows Shortcuts](https://nishantshaligram.github.io/NexusPilot/reference/shortcuts/): Supported keyboard chord arrays.
+
+## Key Technical Facts
+- Supported Platforms: Windows 10, Windows 11 (64-bit)
+- Python Requirements: Python 3.10+
+- License: Apache License, Version 2.0 (with patent protection)
+- Repository: https://github.com/nishantshaligram/NexusPilot

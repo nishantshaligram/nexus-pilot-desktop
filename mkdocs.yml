@@ -7,6 +7,7 @@ repo_name: nishantshaligram/NexusPilot
 
 theme:
   name: material
+  custom_dir: overrides
   logo: assets/logo.svg
   favicon: assets/icon_mark.jpg
   palette:
