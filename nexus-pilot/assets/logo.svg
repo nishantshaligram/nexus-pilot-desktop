@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="nexusGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00D2FF" />
+      <stop offset="100%" stop-color="#3A7BD5" />
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF512F" />
+      <stop offset="100%" stop-color="#DD2476" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background rounded canvas -->
+  <rect x="16" y="16" width="224" height="224" rx="48" fill="#141724" stroke="url(#nexusGrad)" stroke-width="6" />
+
+  <!-- Desktop Monitor Frame -->
+  <rect x="48" y="56" width="160" height="110" rx="12" fill="#1C2136" stroke="#4C5A8A" stroke-width="4" />
+  
+  <!-- Stand & Base -->
+  <path d="M128 166 L128 190" stroke="#4C5A8A" stroke-width="6" stroke-linecap="round" />
+  <path d="M96 190 L160 190" stroke="#4C5A8A" stroke-width="6" stroke-linecap="round" />
+
+  <!-- Pilot / Radar Waves -->
+  <circle cx="128" cy="111" r="36" fill="none" stroke="url(#nexusGrad)" stroke-width="3" stroke-dasharray="6 4" opacity="0.6" />
+  <circle cx="128" cy="111" r="22" fill="none" stroke="url(#nexusGrad)" stroke-width="3" opacity="0.8" />
+
+  <!-- Actuation Mouse Cursor -->
+  <path d="M128 92 L146 136 L134 133 L126 150 L118 146 L126 129 L112 126 Z" fill="url(#accentGrad)" stroke="#FFFFFF" stroke-width="2" />
+</svg>

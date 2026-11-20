@@ -84,11 +84,11 @@ if ($TargetAgent -eq "All" -or $TargetAgent -eq "Antigravity") {
     Write-Host "[1/4] Installing for Google Antigravity..." -ForegroundColor Cyan
     $PluginTargetDir = "$HOME/.gemini/config/plugins/nexus-pilot"
     try {
-        if (-not (Test-Path "$HOME/.gemini/config/plugins")) {
-            New-Item -ItemType Directory -Path "$HOME/.gemini/config/plugins" -Force | Out-Null
+        if (-not (Test-Path $PluginTargetDir)) {
+            New-Item -ItemType Directory -Path $PluginTargetDir -Force | Out-Null
         }
-        # Copy full plugin directory
-        Copy-Item -Path "$ProjectRoot" -Destination $PluginTargetDir -Recurse -Force | Out-Null
+        # Copy full plugin contents
+        Copy-Item -Path "$ProjectRoot/*" -Destination $PluginTargetDir -Recurse -Force | Out-Null
         Write-Host "    [x] Plugin bundle installed in: $PluginTargetDir" -ForegroundColor Green
 
         # Also configure global Antigravity MCP server entry
