@@ -1,6 +1,7 @@
 """
 NexusPilot - Automated Test Suite
-Verifies Win32 input synthesizer, screen perception, UIA tree inspection, and safety guardian.
+Verifies Win32 input synthesizer, screen perception, UIA tree inspection,
+hybrid background invocation, and safety guardian boundary enforcement.
 """
 
 import sys
@@ -59,6 +60,24 @@ class TestUIABridge(unittest.TestCase):
         self.assertIn("elements", tree)
         print(f"[x] UIA Tree Inspection: Found {len(tree['elements'])} elements in '{tree.get('window_title')}'")
 
+    def test_background_invocation_fallback_contract(self):
+        # Non-existent or canvas query must return graceful boolean contract without crashing
+        success, msg, elem = self.bridge.invoke_element_background("NonExistentButtonXYZ_123")
+        self.assertFalse(success)
+        self.assertIn("custom canvas", msg.lower())
+        print(f"[x] Background Invocation Contract: Handled gracefully ({msg})")
+
+    def test_background_text_setting_contract(self):
+        success, msg = self.bridge.set_element_value_background("NonExistentInputXYZ_123", "Sample Text")
+        self.assertFalse(success)
+        self.assertIn("custom canvas", msg.lower())
+        print(f"[x] Background Value Setting Contract: Handled gracefully ({msg})")
+
+    def test_background_at_point_contract(self):
+        success, msg = self.bridge.invoke_at_point_background(0, 0)
+        self.assertIsInstance(success, bool)
+        print(f"[x] Coordinate Background Invocation: Handled gracefully ({msg})")
+
 
 class TestSafetyGuardian(unittest.TestCase):
     def setUp(self):
@@ -85,6 +104,18 @@ class TestSafetyGuardian(unittest.TestCase):
         with self.assertRaises(SafetyViolationError):
             self.guardian.validate_click_boundary(800, 800)
         print("[x] Boundary Lock Enforcement: Verified")
+
+    def test_window_target_validation(self):
+        self.guardian.boundary_lock_enabled = True
+        self.guardian.locked_hwnd = 12345
+
+        # Matching HWND passes
+        self.guardian.validate_window_target(12345, "Target App")
+
+        # Different external HWND raises SafetyViolationError
+        with self.assertRaises(SafetyViolationError):
+            self.guardian.validate_window_target(99999, "External Slack/Discord")
+        print("[x] Window Target Boundary Isolation: Verified")
 
 
 if __name__ == "__main__":

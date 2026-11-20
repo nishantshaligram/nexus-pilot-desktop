@@ -5,7 +5,7 @@ description: Autonomous human-grade desktop navigation, window management, and n
 
 # Desktop Human Pilot Skill
 
-This skill guides agents in operating native Windows desktop applications (Visual Studio, database clients, Figma, ERPs, settings consoles) with human-like precision and safety.
+This skill guides agents in operating native Windows desktop applications (Visual Studio, database clients, Figma, ERPs, settings consoles) with human-like precision, non-intrusive hybrid execution, and hard safety boundaries.
 
 ---
 
@@ -16,8 +16,8 @@ Every interaction with native software must adhere to this 4-step loop. Never ex
 ```mermaid
 flowchart TD
     O["1. OBSERVE\nQuery UIA tree or capture targeted window"]
-    P["2. PLAN\nLocate control or coordinates & verify safety"]
-    A["3. ACT\nFocus window, click element, or send keystrokes"]
+    P["2. PLAN\nLocate control, verify focus & boundary safety"]
+    A["3. ACT (HYBRID)\nBackground Invocation if unfocused\nVisual Cursor + SendInput if focused / canvas"]
     V["4. VERIFY\nCheck post-action state & confirm UI transition"]
 
     O --> P --> A --> V
@@ -37,13 +37,19 @@ Always prefer semantic inspection over blind full-screen images:
 
 ### Step 2: Plan
 - Ensure the target window is authorized and belongs to the task.
+- Activate boundary guard via `set_safety_boundary(enabled=True, window_title="...")` when working on an isolated application.
 - Check if the action is destructive (e.g., "Delete", "Drop", "Format"). If destructive, pause and confirm with the user.
-- If using coordinates, verify they fall within the application's active window bounds.
 
-### Step 3: Act
-- **Deterministic Click**: Use `click_element(query="...", window_title="...")` whenever an element name or ID is known. It automatically handles window focus and center-point clicking.
-- **Coordinate Click**: Use `mouse_click(x=..., y=...)` for canvas or custom coordinates.
-- **Keyboard & Shortcuts**: Use `send_keystrokes(keys=["ctrl", "s"])` for hotkeys or `send_keystrokes(text="...")` for typing.
+### Step 3: Act (Intelligent Hybrid Execution)
+The server dynamically selects the optimal actuation mode:
+1. **Background Invocation (Unfocused App)**:
+   - When calling `click_element(query="Save", window_title="App")`, if the application is not the active foreground window, it invokes the button silently via UIA `InvokePattern` or Win32 messages.
+   - **Benefit**: The user's mouse and keyboard are never seized; the user can continue typing in another window undisturbed.
+2. **Foreground Visual Actuation (Focused App or Custom Canvas Fallback)**:
+   - When the target application is already focused, or when a background control is on a custom canvas that does not support UIA patterns:
+   - Automatically focuses the window, glides the Visual Pilot HUD cursor smoothly, displays a pointer hand on interactive elements, fires click ripple animations, and types with human cadence and an I-beam cursor.
+3. **Boundary Protection**:
+   - Every coordinate or window target is validated against `SafetyGuardian`. Any attempt to click outside the permitted boundary window is blocked.
 
 ### Step 4: Verify
 - After acting, allow a brief UI settling pause (100–300ms).
@@ -54,7 +60,7 @@ Always prefer semantic inspection over blind full-screen images:
 
 ## 2. Window Management Rules
 
-1. Always call `focus_window(title_keyword="...")` before sending keystrokes or coordinates if switching between apps.
+1. When calling `click_element(query="...", window_title="...")`, background invocation is attempted first if the window is in the background. If fallback to foreground is necessary, `focus_window` brings the application to the front.
 2. Verify active application context with `get_active_window()` before typing passwords or queries.
 3. If an application is minimized, `focus_window` will automatically restore it (`SW_RESTORE`).
 

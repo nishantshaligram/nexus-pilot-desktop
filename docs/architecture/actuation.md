@@ -1,6 +1,9 @@
-# Win32 Actuation Engine & Kinematics
+# Intelligent Hybrid Actuation Engine & Kinematics
 
-NexusPilot dispatches low-level mouse and keyboard events directly into the Windows OS event queue using native Win32 `SendInput`.
+NexusPilot dispatches low-level mouse and keyboard events using an **Intelligent Hybrid Actuation Strategy**:
+- **Background Applications**: Executes silently via Windows UI Automation (UIA) COM patterns (`IUIAutomationInvokePattern`, `IUIAutomationTogglePattern`, `IUIAutomationSelectionItemPattern`, `IUIAutomationValuePattern`) or Win32 window messages. It never steals window focus and never moves the physical cursor, leaving the human user free to continue working in other applications unhindered.
+- **Focused Applications**: Glides the Visual Pilot Overlay HUD with smooth Bézier curves, morphs the cursor to a pointer hand over interactive controls, renders click ripples, and types text with human cadence and an animated I-beam cursor.
+- **Custom Canvas Fallback**: When an application renders on a custom canvas (DirectX, Electron web canvas, Flutter, game engines) where background UIA patterns are unavailable, it gracefully falls back to bringing the window to focus, gliding the visual HUD, and actuating via native Win32 `SendInput`.
 
 ---
 
@@ -14,20 +17,28 @@ NexusPilot explicitly registers **Per-Monitor DPI Awareness v2** via `SetProcess
 
 ---
 
-## 2. Window Focus Stealing Prevention
+## 2. Silent Background Invocation vs Foreground Visual HUD
 
-Windows blocks background processes from rudely bringing windows to the foreground. NexusPilot implements the standard Win32 focus handshake:
+```mermaid
+flowchart TD
+    Req["Actuation Request (click_element, mouse_click, send_keystrokes)"]
+    CheckFocus{"Is Target App Focused?"}
+    TryBG{"Supports UIA Background Pattern?"}
+    BGInvoke["Silent Background Invocation\n(UIA Invoke/Value Pattern or Win32 Message)\n• Zero focus stealing\n• Physical cursor unmoved\n• User typing unhindered"]
+    VisualAct["Visual HUD + SendInput Actuation\n• Visual cursor glide & pointer hand\n• Click ripple / I-beam text bubble\n• Win32 SendInput"]
 
-1. Identifies the foreground thread via `GetWindowThreadProcessId(GetForegroundWindow())`.
-2. Attaches thread input: `AttachThreadInput(foreThread, appThread, TRUE)`.
-3. Calls `ShowWindow(targetHwnd, SW_RESTORE)` to un-minimize if needed.
-4. Executes `SetForegroundWindow` and `BringWindowToTop`.
-5. Detaches thread input cleanly.
+    Req --> CheckFocus
+    CheckFocus -->|Yes| VisualAct
+    CheckFocus -->|No| TryBG
+    TryBG -->|Yes| BGInvoke
+    TryBG -->|No (Custom Canvas)| VisualAct
+```
 
 ---
 
-## 3. Human-Grade Mouse Kinematics
+## 3. Human-Grade Mouse Kinematics & Visual Pilot HUD
 
-- **Bézier Trajectories**: Eases mouse movements over 5-10 intermediate waypoints to avoid triggering rapid-jitter UI glitches.
-- **Full Drag-and-Drop**: Emits synchronized `MOUSEEVENTF_LEFTDOWN`, intermediate drag motions, and `MOUSEEVENTF_LEFTUP`.
+- **Bézier Trajectories**: Eases mouse movements smoothly across intermediate waypoints to avoid triggering rapid-jitter UI glitches.
+- **Transparent Click-Through Overlay**: Renders at 60 FPS using Win32 `WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_NOACTIVATE` — never intercepts clicks intended for applications.
+- **Zero Input Lock**: Windows `BlockInput` is never called, ensuring the user's physical mouse and keyboard remain 100% responsive.
 - **Unicode Keystroke Typing**: Uses `KEYEVENTF_UNICODE` so international characters, emojis, and symbols type reliably regardless of the host keyboard layout.

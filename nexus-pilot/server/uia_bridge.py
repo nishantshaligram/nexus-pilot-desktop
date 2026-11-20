@@ -1,7 +1,7 @@
 """
 NexusPilot - Windows UI Automation (UIA) Semantic Bridge
-Queries native controls, interactive elements, and exact bounding boxes using COM IUIAutomation.
-Includes Win32 EnumChildWindows fallback for maximum resilience.
+Queries native controls, interactive elements, exact bounding boxes, and executes background invocation.
+Includes Win32 EnumChildWindows and window message fallbacks.
 """
 
 import ctypes
@@ -9,6 +9,18 @@ from ctypes import wintypes
 import time
 
 user32 = ctypes.windll.user32
+
+# UIA Constants
+UIA_InvokePatternId = 10000
+UIA_SelectionItemPatternId = 10010
+UIA_ValuePatternId = 10002
+UIA_TogglePatternId = 10015
+
+# Win32 Messages
+WM_SETTEXT = 0x000C
+BM_CLICK = 0x00F5
+WM_COMMAND = 0x0111
+WM_CHAR = 0x0102
 
 # Mapping UIA ControlType IDs to human-readable names
 UIA_CONTROL_TYPES = {
@@ -52,7 +64,7 @@ INTERACTIVE_TYPES = {
 
 
 class UIABridge:
-    """Provides semantic accessibility tree inspection on Windows."""
+    """Provides semantic accessibility tree inspection and background invocation on Windows."""
 
     def __init__(self):
         self._uia = None
@@ -78,7 +90,8 @@ class UIABridge:
             except Exception:
                 self._uia = None
 
-    def _find_window_hwnd(self, keyword: str) -> tuple[int, str] | None:
+    def find_window_hwnd(self, keyword: str) -> tuple[int, str] | None:
+        """Finds window handle and full title by partial keyword match."""
         target_hwnd = None
         target_title = ""
 
@@ -117,7 +130,7 @@ class UIABridge:
         matched_title = ""
 
         if window_title:
-            win_match = self._find_window_hwnd(window_title)
+            win_match = self.find_window_hwnd(window_title)
             if win_match:
                 target_hwnd, matched_title = win_match
             else:
@@ -130,7 +143,6 @@ class UIABridge:
         # Attempt COM UIA traversal
         if self._uia and target_hwnd:
             try:
-                from comtypes.gen import UIAutomationClient
                 root_elem = self._uia.ElementFromHandle(target_hwnd)
                 if root_elem:
                     walker = self._uia.ControlViewWalker
@@ -159,10 +171,9 @@ class UIABridge:
             ctype = UIA_CONTROL_TYPES.get(ctype_id, f"Type_{ctype_id}")
             auto_id = node.CurrentAutomationId or ""
             class_name = node.CurrentClassName or ""
+            native_hwnd = node.CurrentNativeWindowHandle or 0
 
-            # Check bounding rectangle
             rect = node.CurrentBoundingRectangle
-            # rect is a tagRECT (left, top, right, bottom)
             w = rect.right - rect.left
             h = rect.bottom - rect.top
 
@@ -175,6 +186,7 @@ class UIABridge:
                     "control_type": ctype,
                     "id": auto_id or f"{ctype}_{len(results)}",
                     "class_name": class_name,
+                    "hwnd": native_hwnd,
                     "rect": [rect.left, rect.top, w, h],
                     "center": [rect.left + w // 2, rect.top + h // 2]
                 })
@@ -219,6 +231,7 @@ class UIABridge:
                             "control_type": guessed_type,
                             "id": f"win32_{hwnd}",
                             "class_name": cls_name,
+                            "hwnd": hwnd,
                             "rect": [rect.left, rect.top, w, h],
                             "center": [rect.left + w // 2, rect.top + h // 2]
                         })
@@ -238,3 +251,204 @@ class UIABridge:
                 return el
 
         return None
+
+    def _find_uia_element_node(self, root_elem, query_lower: str, walker, depth: int = 0, max_depth: int = 4):
+        """Recursively traverses UIA tree returning the raw COM IUIAutomationElement node."""
+        if depth > max_depth or not root_elem:
+            return None
+
+        try:
+            name = (root_elem.CurrentName or "").lower()
+            auto_id = (root_elem.CurrentAutomationId or "").lower()
+            if query_lower in name or query_lower == auto_id:
+                return root_elem
+
+            child = walker.GetFirstChildElement(root_elem)
+            while child:
+                match = self._find_uia_element_node(child, query_lower, walker, depth + 1, max_depth)
+                if match:
+                    return match
+                child = walker.GetNextSiblingElement(child)
+        except Exception:
+            pass
+        return None
+
+    def invoke_element_background(
+        self,
+        query: str,
+        window_title: str | None = None
+    ) -> tuple[bool, str, dict | None]:
+        """
+        Attempts to click/invoke a UI element silently in the background without stealing window focus
+        or moving the physical cursor.
+        Returns: (success: bool, description: str, element_info: dict | None)
+        """
+        target_hwnd = None
+        matched_title = ""
+        if window_title:
+            win_match = self.find_window_hwnd(window_title)
+            if win_match:
+                target_hwnd, matched_title = win_match
+        else:
+            target_hwnd = user32.GetForegroundWindow()
+
+        elem_info = self.find_element(query, window_title=window_title)
+        query_lower = query.lower().strip()
+
+        # 1. Try UIA COM Pattern Invocation
+        if self._uia and target_hwnd:
+            try:
+                from comtypes.gen import UIAutomationClient
+                root_elem = self._uia.ElementFromHandle(target_hwnd)
+                if root_elem:
+                    walker = self._uia.ControlViewWalker
+                    node = self._find_uia_element_node(root_elem, query_lower, walker)
+                    if node:
+                        # Try InvokePattern
+                        try:
+                            inv = node.GetCurrentPatternAs(
+                                UIA_InvokePatternId,
+                                UIAutomationClient.IUIAutomationInvokePattern._iid_
+                            )
+                            if inv:
+                                inv.Invoke()
+                                return (True, "Invoked via UIA InvokePattern in background without stealing focus.", elem_info)
+                        except Exception:
+                            pass
+
+                        # Try TogglePattern (checkboxes / toggles)
+                        try:
+                            tog = node.GetCurrentPatternAs(
+                                UIA_TogglePatternId,
+                                UIAutomationClient.IUIAutomationTogglePattern._iid_
+                            )
+                            if tog:
+                                tog.Toggle()
+                                return (True, "Toggled via UIA TogglePattern in background.", elem_info)
+                        except Exception:
+                            pass
+
+                        # Try SelectionItemPattern (tabs / radio buttons / list items)
+                        try:
+                            sel = node.GetCurrentPatternAs(
+                                UIA_SelectionItemPatternId,
+                                UIAutomationClient.IUIAutomationSelectionItemPattern._iid_
+                            )
+                            if sel:
+                                sel.Select()
+                                return (True, "Selected via UIA SelectionItemPattern in background.", elem_info)
+                        except Exception:
+                            pass
+            except Exception:
+                pass
+
+        # 2. Try Win32 Message (BM_CLICK) if element has native HWND
+        if elem_info and elem_info.get("hwnd", 0) > 0:
+            ctrl_hwnd = elem_info["hwnd"]
+            user32.SendMessageW(ctrl_hwnd, BM_CLICK, 0, 0)
+            return (True, f"Triggered via Win32 BM_CLICK on control HWND {ctrl_hwnd} in background.", elem_info)
+
+        # 3. Canvas fallback: background invocation not supported
+        return (
+            False,
+            "Target control is on a custom canvas or does not support background UIA invocation patterns.",
+            elem_info
+        )
+
+    def set_element_value_background(
+        self,
+        query: str,
+        text: str,
+        window_title: str | None = None
+    ) -> tuple[bool, str]:
+        """
+        Attempts to write text into an input field in the background without stealing focus.
+        Returns: (success: bool, description: str)
+        """
+        target_hwnd = None
+        if window_title:
+            win_match = self.find_window_hwnd(window_title)
+            if win_match:
+                target_hwnd = win_match[0]
+        else:
+            target_hwnd = user32.GetForegroundWindow()
+
+        elem_info = self.find_element(query, window_title=window_title)
+        query_lower = query.lower().strip()
+
+        # 1. Try UIA ValuePattern
+        if self._uia and target_hwnd:
+            try:
+                from comtypes.gen import UIAutomationClient
+                root_elem = self._uia.ElementFromHandle(target_hwnd)
+                if root_elem:
+                    walker = self._uia.ControlViewWalker
+                    node = self._find_uia_element_node(root_elem, query_lower, walker)
+                    if node:
+                        try:
+                            val = node.GetCurrentPatternAs(
+                                UIA_ValuePatternId,
+                                UIAutomationClient.IUIAutomationValuePattern._iid_
+                            )
+                            if val:
+                                val.SetValue(text)
+                                return (True, f"Value set to '{text}' via UIA ValuePattern in background.")
+                        except Exception:
+                            pass
+            except Exception:
+                pass
+
+        # 2. Try Win32 WM_SETTEXT
+        if elem_info and elem_info.get("hwnd", 0) > 0:
+            ctrl_hwnd = elem_info["hwnd"]
+            user32.SendMessageW(ctrl_hwnd, WM_SETTEXT, 0, text)
+            return (True, f"Text set via Win32 WM_SETTEXT on control HWND {ctrl_hwnd}.")
+
+        return (
+            False,
+            "Target control does not support background UIA ValuePattern or Win32 text setting (custom canvas)."
+        )
+
+    def invoke_at_point_background(self, x: int, y: int) -> tuple[bool, str]:
+        """Attempts to invoke an element at specific coordinates in the background."""
+        if not self._uia:
+            return (False, "UI Automation COM not available.")
+        try:
+            from comtypes.gen import UIAutomationClient
+            pt = wintypes.POINT(x, y)
+            elem = self._uia.ElementFromPoint(pt)
+            if elem:
+                name = elem.CurrentName or "element"
+                try:
+                    inv = elem.GetCurrentPatternAs(
+                        UIA_InvokePatternId,
+                        UIAutomationClient.IUIAutomationInvokePattern._iid_
+                    )
+                    if inv:
+                        inv.Invoke()
+                        return (True, f"Invoked '{name}' via UIA InvokePattern in background.")
+                except Exception:
+                    pass
+                try:
+                    tog = elem.GetCurrentPatternAs(
+                        UIA_TogglePatternId,
+                        UIAutomationClient.IUIAutomationTogglePattern._iid_
+                    )
+                    if tog:
+                        tog.Toggle()
+                        return (True, f"Toggled '{name}' via UIA TogglePattern in background.")
+                except Exception:
+                    pass
+                try:
+                    sel = elem.GetCurrentPatternAs(
+                        UIA_SelectionItemPatternId,
+                        UIAutomationClient.IUIAutomationSelectionItemPattern._iid_
+                    )
+                    if sel:
+                        sel.Select()
+                        return (True, f"Selected '{name}' via UIA SelectionItemPattern in background.")
+                except Exception:
+                    pass
+        except Exception:
+            pass
+        return (False, "Element at coordinates does not support background invocation (custom canvas).")
