@@ -117,6 +117,9 @@ def click_element(
         if not elem:
             return {"success": False, "error": f"Element '{query}' could not be located in UI tree."}
 
+        if synthesizer.hud:
+            synthesizer.hud.notify_lock_element(elem["rect"], elem["name"] or query)
+
         center_x, center_y = elem["center"]
         guardian.validate_click_boundary(center_x, center_y)
 
@@ -267,6 +270,20 @@ def reset_safety_failsafe() -> dict:
 
 
 @server.tool()
+def set_visual_hud(enabled: bool = True) -> dict:
+    """
+    Enables or disables the real-time visual pilot cursor overlay, click ripple animations, and keystroke HUD.
+    """
+    if synthesizer.hud:
+        synthesizer.hud.enabled = enabled
+        if enabled and not synthesizer.hud.is_running:
+            synthesizer.hud.start()
+        elif not enabled:
+            synthesizer.hud.close()
+    return {"visual_hud_enabled": enabled}
+
+
+@server.tool()
 def check_health() -> dict:
     """
     Verifies perception, COM UIA availability, screen metrics, and safety guardian status.
@@ -280,6 +297,7 @@ def check_health() -> dict:
         "active_process": active_win.get("process_name", "None"),
         "virtual_screen": [synthesizer.virt_w, synthesizer.virt_h],
         "uia_com_available": uia_bridge._uia is not None,
+        "visual_hud_active": synthesizer.hud.is_running if synthesizer.hud else False,
         "safety_failsafe_active": guardian.emergency_stop_triggered,
         "boundary_lock_active": guardian.boundary_lock_enabled
     }

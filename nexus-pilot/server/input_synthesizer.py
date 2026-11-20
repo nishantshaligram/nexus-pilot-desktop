@@ -110,10 +110,16 @@ class INPUT(ctypes.Structure):
 
 
 class InputSynthesizer:
-    """Provides human-grade mouse and keyboard actuation for Windows."""
+    """Provides human-grade mouse and keyboard actuation for Windows with Visual Pilot HUD."""
 
-    def __init__(self):
+    def __init__(self, enable_hud: bool = True):
         self._refresh_screen_metrics()
+        self.hud = None
+        try:
+            from overlay_hud import VisualOverlayHUD
+            self.hud = VisualOverlayHUD(enabled=enable_hud)
+        except Exception:
+            pass
 
     def _refresh_screen_metrics(self):
         self.virt_x = user32.GetSystemMetrics(SM_XVIRTUALSCREEN)
@@ -145,8 +151,11 @@ class InputSynthesizer:
         sent = user32.SendInput(n, arr, ctypes.sizeof(INPUT))
         return sent == n
 
-    def move_to(self, x: int, y: int, smooth: bool = False, steps: int = 5) -> bool:
-        """Moves cursor to target coordinates, optionally with intermediate interpolation."""
+    def move_to(self, x: int, y: int, smooth: bool = True, steps: int = 6, is_interactive: bool = False) -> bool:
+        """Moves cursor to target coordinates, animating the visual HUD and moving physical cursor."""
+        if self.hud:
+            self.hud.notify_move(x, y, is_interactive=is_interactive)
+
         if not smooth or steps <= 1:
             norm_x, norm_y = self._to_normalized_absolute(x, y)
             inp = INPUT(type=INPUT_MOUSE)
@@ -158,23 +167,36 @@ class InputSynthesizer:
                 time=0,
                 dwExtraInfo=None
             )
-            return self._send_inputs([inp])
+            self._send_inputs([inp])
+            user32.SetCursorPos(x, y)
+            return True
 
         start_x, start_y = self.get_cursor_position()
         for i in range(1, steps + 1):
             t = i / steps
-            # Smooth ease-out curve
             ease_t = math.sin(t * math.pi / 2)
             cur_x = int(start_x + (x - start_x) * ease_t)
             cur_y = int(start_y + (y - start_y) * ease_t)
-            self.move_to(cur_x, cur_y, smooth=False)
-            time.sleep(0.01)
+            norm_cx, norm_cy = self._to_normalized_absolute(cur_x, cur_y)
+            inp = INPUT(type=INPUT_MOUSE)
+            inp.u.mi = MOUSEINPUT(
+                dx=norm_cx, dy=norm_cy, mouseData=0,
+                dwFlags=MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESK,
+                time=0, dwExtraInfo=None
+            )
+            self._send_inputs([inp])
+            user32.SetCursorPos(cur_x, cur_y)
+            time.sleep(0.015)
         return True
 
     def click(self, x: int, y: int, button: str = 'left', clicks: int = 1) -> bool:
-        """Moves cursor and executes mouse clicks."""
-        self.move_to(x, y, smooth=False)
-        time.sleep(0.02)
+        """Moves cursor, morphs to pointer hand, shows click ripple animation, and executes clicks."""
+        self.move_to(x, y, smooth=True, steps=4, is_interactive=True)
+        time.sleep(0.03)
+
+        if self.hud:
+            self.hud.notify_click(x, y, button=button)
+            time.sleep(0.04)  # Visual click anticipation
 
         down_flag = MOUSEEVENTF_LEFTDOWN
         up_flag = MOUSEEVENTF_LEFTUP
@@ -265,7 +287,10 @@ class InputSynthesizer:
         return self._send_inputs([inp])
 
     def type_text(self, text: str, delay_ms: int = 10) -> bool:
-        """Types Unicode text directly into the focused control."""
+        """Types Unicode text directly into focused control, rendering floating keystroke HUD."""
+        if self.hud:
+            self.hud.notify_type(text)
+
         for char in text:
             code = ord(char)
             inp_down = INPUT(type=INPUT_KEYBOARD)
