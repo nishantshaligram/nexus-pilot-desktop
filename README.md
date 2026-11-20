@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="https://github.com/nishantshaligram/NexusPilot/actions"><img src="https://img.shields.io/github/actions/workflow/status/nishantshaligram/NexusPilot/ci.yml?branch=main&label=CI&logo=github" alt="CI Status" /></a>
-  <a href="https://nishantshaligram.github.io/NexusPilot/"><img src="https://img.shields.io/badge/Docs-MkDocs%20Material-00D2FF?logo=materialformkdocs" alt="Documentation" /></a>
+  <a href="https://nishantshaligram.github.io/NexusPilot/"><img src="https://img.shields.io/badge/Docs-VitePress%20Modern%20UI-38BDF8?logo=vitepress" alt="Documentation" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License: Apache 2.0" /></a>
   <img src="https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6?logo=windows" alt="Platform: Windows" />
   <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python" alt="Python 3.10+" />

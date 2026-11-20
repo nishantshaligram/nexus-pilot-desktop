@@ -4,3 +4,7 @@ __pycache__/
 .venv/
 env/
 .pytest_cache/
+node_modules/
+docs/.vitepress/dist/
+docs/.vitepress/cache/
+site/

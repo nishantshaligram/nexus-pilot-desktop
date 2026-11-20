@@ -1,45 +1,34 @@
-# Project NexusPilot
+---
+layout: home
 
-<p align="center">
-  <img src="assets/brand_logo.jpg" width="460" alt="NexusPilot Logo" />
-</p>
+hero:
+  name: "NexusPilot"
+  text: "Universal Desktop Computer-Use"
+  tagline: "Empower AI agents with human-grade vision, mouse actuation, keyboard input, and Windows UI Automation."
+  image:
+    src: /assets/brand_logo.jpg
+    alt: NexusPilot Logo
+  actions:
+    - theme: brand
+      text: Get Started →
+      link: /getting-started/quickstart
+    - theme: alt
+      text: View on GitHub
+      link: https://github.com/nishantshaligram/NexusPilot
 
-**NexusPilot** is an open-source, modular **Desktop Human-Grade Automation Suite** delivered as a cross-compatible **Model Context Protocol (MCP) Server** and an **Antigravity Plugin + Skill**.
-
-It provides AI agents with human-like vision, mouse control, keyboard input, and native Windows accessibility perception, enabling autonomous operation of native desktop software.
-
-```mermaid
-flowchart TD
-    subgraph AgentLayer["Agent Layer (MCP Clients)"]
-        A1["Google Antigravity"]
-        A2["Claude Code"]
-        A3["Cursor / Windsurf"]
-    end
-
-    subgraph PluginLayer["NexusPilot Plugin & Skill Layer"]
-        B1["SKILL.md (Observe-Plan-Act-Verify)"]
-        B2["Safety Guardrails & Boundary Checks"]
-    end
-
-    subgraph MCPEngine["NexusPilot MCP Engine (Local Daemon)"]
-        C1["Tool Dispatcher (JSON-RPC)"]
-        C2["Perception Engine (MSS / DWM Cropping)"]
-        C3["Semantic Engine (Windows UI Automation COM)"]
-        C4["Actuation Engine (Win32 SendInput / DPI V2)"]
-        C5["Failsafe Guardian (Corner Slam / Boundary Lock)"]
-    end
-
-    subgraph WindowsOS["Host Operating System (Windows 10 / 11)"]
-        D1["Display Surfaces & Window Handles (HWND)"]
-        D2["Mouse & Keyboard Event Queue"]
-        D3["UI Automation Core (UIAutomationCore.dll)"]
-    end
-
-    AgentLayer --> PluginLayer
-    PluginLayer --> MCPEngine
-    MCPEngine --> WindowsOS
-```
-
+features:
+  - icon: 🎯
+    title: Dual-Modal Perception
+    details: Combines sub-30ms hardware screen capture with Windows UI Automation (UIA) COM accessibility tree for 100% coordinate precision.
+  - icon: ⚡
+    title: Native Win32 SendInput
+    details: Low-level actuation with Per-Monitor DPI Awareness v2 normalization eliminates multi-monitor coordinate drift.
+  - icon: 🛡️
+    title: Hardware Failsafes
+    details: Corner slam emergency stop, application boundary isolation lock, and destructive keyword gates.
+  - icon: 🔌
+    title: Universal MCP Compatible
+    details: Works out-of-the-box with Google Antigravity, Claude Code, Cursor, and Windsurf via standard MCP.
 ---
 
 ## Frequently Asked Questions
@@ -53,14 +42,8 @@ Anthropic Computer Use runs inside isolated cloud Docker containers with pure vi
 ### Which AI coding agents work with NexusPilot?
 NexusPilot adheres to the open Model Context Protocol (MCP) standard and is verified to work out-of-the-box with **Google Antigravity**, **Claude Code CLI**, **Claude Desktop**, **Cursor IDE**, and **Windsurf**.
 
+### How does NexusPilot prevent multi-monitor and DPI scaling errors?
+NexusPilot implements **Per-Monitor DPI Awareness v2**. It normalizes coordinates across varying monitor resolutions and display scales (100%, 125%, 150%, 200%) directly into Win32 normalized absolute units ($0 \text{ to } 65535$).
+
 ### How does the emergency stop failsafe work?
 If an automated agent ever exhibits unexpected behavior, slam the physical mouse cursor into the top-left corner `(0, 0)`. The hardware failsafe immediately pauses all synthetic input and aborts the task.
-
----
-
-## Key Highlights
-
-- **Dual-Modal Perception**: Combines sub-30ms screen capture with the Windows UI Automation (UIA) accessibility tree for 100% coordinate precision.
-- **DPI-Aware Win32 Actuation**: Low-level `SendInput` mouse and keyboard control with Per-Monitor DPI v2 normalization.
-- **Hardware Corner Failsafe**: Slamming the physical mouse cursor to `(0, 0)` immediately halts all automation.
-- **Cross-Agent Compatible**: Works out-of-the-box with Google Antigravity, Claude Code, Claude Desktop, Cursor, and Windsurf via standard MCP.
