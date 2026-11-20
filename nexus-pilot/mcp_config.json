@@ -2,7 +2,7 @@
   "mcpServers": {
     "nexus-pilot": {
       "command": "python",
-      "args": ["server/pilot_server.py"],
+      "args": ["${PLUGIN_ROOT}/server/pilot_server.py"],
       "description": "NexusPilot Windows Computer-Use MCP Server"
     }
   }
