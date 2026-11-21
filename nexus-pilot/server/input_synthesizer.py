@@ -5,9 +5,13 @@ High-precision, DPI-aware mouse and keyboard actuation using native Win32 SendIn
 
 import ctypes
 from ctypes import wintypes
+import os
+import subprocess
+import shutil
 import time
 import math
 import psutil
+import winreg
 
 # Enable Per-Monitor DPI Awareness v2
 try:
@@ -429,3 +433,275 @@ class InputSynthesizer:
             "rect": [rect.left, rect.top, rect.right, rect.bottom],
             "dpi_scale": round(dpi / 96.0, 2)
         }
+
+    # ----------------------------------------------------------------
+    # Application Launcher
+    # ----------------------------------------------------------------
+
+    # Well-known app aliases -> executable names or Start-Menu URIs
+    _APP_ALIASES = {
+        "notepad": "notepad.exe",
+        "calculator": "calc.exe",
+        "calc": "calc.exe",
+        "paint": "mspaint.exe",
+        "cmd": "cmd.exe",
+        "command prompt": "cmd.exe",
+        "terminal": "wt.exe",
+        "windows terminal": "wt.exe",
+        "powershell": "powershell.exe",
+        "explorer": "explorer.exe",
+        "file explorer": "explorer.exe",
+        "files": "explorer.exe",
+        "task manager": "taskmgr.exe",
+        "taskmgr": "taskmgr.exe",
+        "settings": "ms-settings:",
+        "control panel": "control.exe",
+        "control": "control.exe",
+        "registry": "regedit.exe",
+        "regedit": "regedit.exe",
+        "snipping tool": "snippingtool.exe",
+        "snip": "snippingtool.exe",
+        "wordpad": "wordpad.exe",
+        "edge": "msedge.exe",
+        "microsoft edge": "msedge.exe",
+        "chrome": "chrome.exe",
+        "google chrome": "chrome.exe",
+        "firefox": "firefox.exe",
+        "opera": "opera.exe",
+        "brave": "brave.exe",
+        "code": "code.exe",
+        "vscode": "code.exe",
+        "visual studio code": "code.exe",
+        "word": "winword.exe",
+        "excel": "excel.exe",
+        "powerpoint": "powerpnt.exe",
+        "outlook": "outlook.exe",
+        "teams": "teams.exe",
+        "discord": "discord.exe",
+        "slack": "slack.exe",
+        "spotify": "spotify.exe",
+        "obs": "obs64.exe",
+        "obs studio": "obs64.exe",
+        "vlc": "vlc.exe",
+        "gimp": "gimp.exe",
+        "git bash": "git-bash.exe",
+    }
+
+    def launch_application(
+        self,
+        app_name: str,
+        args: list[str] | None = None,
+        working_dir: str | None = None,
+        wait_for_window_secs: float = 5.0
+    ) -> dict:
+        """
+        Launches a desktop application by name, path, or URI.
+
+        Resolution order:
+        1. Check well-known alias map (e.g., "notepad", "chrome", "settings").
+        2. Check if it's a direct executable path or URI (ms-settings:, http:, etc.).
+        3. Search PATH for the executable.
+        4. Search Windows App Paths registry for installed apps.
+        5. Search Start Menu shortcut (.lnk) files.
+        6. Fall back to ShellExecuteW (let Windows find it).
+
+        After launch, waits up to wait_for_window_secs for a new window to appear.
+        """
+        original_name = app_name.strip()
+        name_lower = original_name.lower()
+        launch_args = args or []
+
+        # 1. Alias resolution
+        resolved = self._APP_ALIASES.get(name_lower, None)
+
+        # 2. Direct path or URI
+        if not resolved:
+            if os.path.isfile(original_name):
+                resolved = original_name
+            elif ":" in original_name and not original_name.startswith("\\\\"):
+                # URI (ms-settings:, http://, etc.) or absolute path
+                resolved = original_name
+
+        # 3. Search PATH
+        if not resolved:
+            path_exe = shutil.which(original_name)
+            if not path_exe:
+                # Try with .exe suffix
+                path_exe = shutil.which(original_name + ".exe")
+            if path_exe:
+                resolved = path_exe
+
+        # 4. Search Windows App Paths registry
+        if not resolved:
+            resolved = self._find_in_app_paths(original_name)
+
+        # 5. Search Start Menu shortcuts
+        if not resolved:
+            resolved = self._find_start_menu_shortcut(original_name)
+
+        # Snapshot existing window PIDs before launch
+        pre_pids = set()
+        try:
+            for proc in psutil.process_iter(['pid']):
+                pre_pids.add(proc.info['pid'])
+        except Exception:
+            pass
+
+        # Launch
+        launched_via = "unknown"
+        pid = None
+
+        if resolved:
+            try:
+                if resolved.startswith("ms-") or resolved.startswith("http:") or resolved.startswith("https:"):
+                    # URI launch via ShellExecuteW
+                    result = ctypes.windll.shell32.ShellExecuteW(
+                        None, "open", resolved, " ".join(launch_args) if launch_args else None,
+                        working_dir, 1  # SW_SHOWNORMAL
+                    )
+                    if result > 32:
+                        launched_via = "shell_uri"
+                    else:
+                        return {"success": False, "error": f"ShellExecuteW failed for URI '{resolved}' (code {result})"}
+                else:
+                    cmd = [resolved] + launch_args
+                    proc = subprocess.Popen(
+                        cmd,
+                        cwd=working_dir,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                        creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP
+                    )
+                    pid = proc.pid
+                    launched_via = "subprocess"
+            except FileNotFoundError:
+                # Fallback to ShellExecuteW
+                result = ctypes.windll.shell32.ShellExecuteW(
+                    None, "open", resolved, " ".join(launch_args) if launch_args else None,
+                    working_dir, 1
+                )
+                if result > 32:
+                    launched_via = "shell_fallback"
+                else:
+                    return {"success": False, "error": f"Could not launch '{resolved}'. Not found on this system."}
+            except Exception as e:
+                return {"success": False, "error": f"Launch failed: {str(e)}"}
+        else:
+            # 6. Last resort: let ShellExecuteW try to resolve it
+            result = ctypes.windll.shell32.ShellExecuteW(
+                None, "open", original_name, " ".join(launch_args) if launch_args else None,
+                working_dir, 1
+            )
+            if result > 32:
+                launched_via = "shell_search"
+            else:
+                return {
+                    "success": False,
+                    "error": f"Application '{original_name}' not found. Try the full path or exact executable name."
+                }
+
+        # Wait for the application window to appear
+        window_info = self._wait_for_new_window(
+            original_name, pre_pids, pid, wait_for_window_secs
+        )
+
+        return {
+            "success": True,
+            "app_name": original_name,
+            "resolved_path": resolved or original_name,
+            "pid": pid,
+            "launched_via": launched_via,
+            "window": window_info
+        }
+
+    def _find_in_app_paths(self, app_name: str) -> str | None:
+        """Searches HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths for the executable."""
+        name_lower = app_name.lower()
+        candidates = [name_lower, name_lower + ".exe"]
+        for cand in candidates:
+            try:
+                key = winreg.OpenKey(
+                    winreg.HKEY_LOCAL_MACHINE,
+                    rf"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\{cand}"
+                )
+                val, _ = winreg.QueryValueEx(key, "")
+                winreg.CloseKey(key)
+                if val:
+                    return val.strip('"')
+            except FileNotFoundError:
+                pass
+            except Exception:
+                pass
+        return None
+
+    def _find_start_menu_shortcut(self, app_name: str) -> str | None:
+        """Searches Start Menu and Desktop for a matching .lnk shortcut."""
+        search_dirs = []
+        # Common user directories
+        appdata = os.environ.get("APPDATA", "")
+        if appdata:
+            search_dirs.append(os.path.join(appdata, r"Microsoft\Windows\Start Menu\Programs"))
+        # All-users Start Menu
+        programdata = os.environ.get("PROGRAMDATA", r"C:\ProgramData")
+        search_dirs.append(os.path.join(programdata, r"Microsoft\Windows\Start Menu\Programs"))
+        # Desktop
+        userprofile = os.environ.get("USERPROFILE", "")
+        if userprofile:
+            search_dirs.append(os.path.join(userprofile, "Desktop"))
+
+        name_lower = app_name.lower()
+
+        for search_dir in search_dirs:
+            if not os.path.isdir(search_dir):
+                continue
+            for root, dirs, files in os.walk(search_dir):
+                for f in files:
+                    if f.lower().endswith(".lnk") and name_lower in f.lower().replace(".lnk", ""):
+                        # Return the .lnk path; ShellExecuteW can open shortcuts
+                        return os.path.join(root, f)
+        return None
+
+    def _wait_for_new_window(
+        self,
+        app_hint: str,
+        pre_pids: set,
+        launched_pid: int | None,
+        timeout_secs: float
+    ) -> dict | None:
+        """Waits for a new visible window to appear from the launched application."""
+        deadline = time.monotonic() + timeout_secs
+        hint_lower = app_hint.lower()
+
+        while time.monotonic() < deadline:
+            time.sleep(0.3)
+            # Check active window
+            hwnd = user32.GetForegroundWindow()
+            if hwnd:
+                length = user32.GetWindowTextLengthW(hwnd)
+                if length > 0:
+                    buff = ctypes.create_unicode_buffer(length + 1)
+                    user32.GetWindowTextW(hwnd, buff, length + 1)
+                    title = buff.value
+
+                    pid_out = wintypes.DWORD()
+                    user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid_out))
+                    win_pid = pid_out.value
+
+                    # Match by PID or by title containing the app hint
+                    is_new_pid = win_pid not in pre_pids
+                    is_launched = (launched_pid and win_pid == launched_pid)
+                    title_match = hint_lower in title.lower()
+
+                    if is_launched or is_new_pid or title_match:
+                        proc_name = "unknown"
+                        try:
+                            proc_name = psutil.Process(win_pid).name()
+                        except Exception:
+                            pass
+                        return {
+                            "hwnd": hwnd,
+                            "title": title,
+                            "pid": win_pid,
+                            "process_name": proc_name
+                        }
+        return None

@@ -2,12 +2,18 @@
 NexusPilot - Visual Pilot Overlay HUD
 Renders a transparent, click-through, top-most visual cursor, click animations,
 pointing hand on interactive controls, and keystroke visualization.
+
+SAFETY: The overlay window MUST remain click-through at all times.
+WS_EX_TRANSPARENT is re-enforced every animation tick to prevent Tkinter
+or Windows from silently stripping it, which would create a fullscreen
+invisible input-blocking wall.
 """
 
 import sys
 import time
 import math
 import queue
+import atexit
 import threading
 import tkinter as tk
 import ctypes
@@ -21,6 +27,9 @@ WS_EX_TRANSPARENT = 0x00000020
 WS_EX_NOACTIVATE = 0x08000000
 WS_EX_TOOLWINDOW = 0x00000080
 
+# The exact set of extended style flags the overlay MUST maintain
+_REQUIRED_EX_FLAGS = WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW
+
 SM_XVIRTUALSCREEN = 76
 SM_YVIRTUALSCREEN = 77
 SM_CXVIRTUALSCREEN = 78
@@ -33,7 +42,12 @@ MODE_IBEAM = "ibeam"
 
 
 class VisualOverlayHUD:
-    """Provides human-visible cursor animations and keystroke HUD."""
+    """Provides human-visible cursor animations and keystroke HUD.
+
+    CRITICAL SAFETY INVARIANT: The overlay window is always click-through.
+    Every animation tick re-verifies WS_EX_TRANSPARENT on the native HWND.
+    If the flag is ever lost, it is immediately re-applied.
+    """
 
     def __init__(self, enabled: bool = True):
         self.enabled = enabled
@@ -42,6 +56,7 @@ class VisualOverlayHUD:
         self._thread = None
         self._root = None
         self._canvas = None
+        self._hwnd = None  # Cached native window handle for style enforcement
 
         # Current visual state
         self.cur_x = 100
@@ -51,10 +66,16 @@ class VisualOverlayHUD:
         self.cur_mode = MODE_ARROW
 
         # Animation state
-        self.ripples = []  # list of {x, y, radius, max_radius, color, alpha}
-        self.target_box = None  # {x, y, w, h, label, life}
+        self.ripples = []  # list of {x, y, radius, max_radius, color}
+        self.target_box = None  # {rect, label, life}
         self.typed_text = ""
         self.text_bubble_life = 0
+
+        # Tick counter for periodic heavy checks
+        self._tick_count = 0
+
+        # Register cleanup on interpreter shutdown
+        atexit.register(self._atexit_cleanup)
 
         if self.enabled:
             self.start()
@@ -71,7 +92,6 @@ class VisualOverlayHUD:
         try:
             self._root = tk.Tk()
             self._root.overrideredirect(True)
-            self._root.attributes("-topmost", True)
             self._root.config(bg="#010101")
             self._root.attributes("-transparentcolor", "#010101")
 
@@ -85,16 +105,21 @@ class VisualOverlayHUD:
 
             self._root.geometry(f"{vw}x{vh}+{vx}+{vy}")
 
-            # Make window 100% click-through (WS_EX_TRANSPARENT)
-            hwnd = user32.GetParent(self._root.winfo_id())
-            if not hwnd:
-                hwnd = self._root.winfo_id()
-            style = user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
-            user32.SetWindowLongW(
-                hwnd,
-                GWL_EXSTYLE,
-                style | WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW
-            )
+            # Force Tk to map the window so winfo_id() returns a valid HWND
+            self._root.update_idletasks()
+
+            # Resolve the actual top-level native HWND
+            inner_id = self._root.winfo_id()
+            self._hwnd = user32.GetParent(inner_id) or inner_id
+
+            # Apply click-through flags BEFORE setting topmost
+            self._enforce_click_through()
+
+            # Set topmost AFTER extended styles are locked in
+            self._root.attributes("-topmost", True)
+
+            # Re-enforce one more time (Tk's -topmost may have reset GWL_EXSTYLE)
+            self._enforce_click_through()
 
             self._canvas = tk.Canvas(
                 self._root,
@@ -105,15 +130,52 @@ class VisualOverlayHUD:
             )
             self._canvas.pack(fill="both", expand=True)
 
+            # Intercept WM_WINDOWPOSCHANGED to re-enforce styles when Windows moves us
+            self._root.bind("<Configure>", lambda e: self._enforce_click_through())
+
             # Start animation tick
             self._root.after(16, self._on_tick)
             self._root.mainloop()
-        except Exception as e:
+        except Exception:
+            pass
+        finally:
             self.is_running = False
+            self._destroy_window()
+
+    def _enforce_click_through(self):
+        """Re-applies WS_EX_TRANSPARENT and related flags on the native HWND.
+
+        This is the critical safety mechanism. Tkinter's internal event processing
+        can silently strip WS_EX_TRANSPARENT when it handles window position changes,
+        focus events, or attribute updates. If the flag is ever lost, the fullscreen
+        overlay becomes an invisible input-blocking wall.
+
+        Called:
+        - At startup (twice: before and after -topmost)
+        - Every animation tick (fast bitwise check, only SetWindowLongW if needed)
+        - On <Configure> events (window position/size changes)
+        """
+        if not self._hwnd:
+            return
+        try:
+            current_style = user32.GetWindowLongW(self._hwnd, GWL_EXSTYLE)
+            if (current_style & _REQUIRED_EX_FLAGS) != _REQUIRED_EX_FLAGS:
+                user32.SetWindowLongW(
+                    self._hwnd,
+                    GWL_EXSTYLE,
+                    current_style | _REQUIRED_EX_FLAGS
+                )
+        except Exception:
+            pass
 
     def _on_tick(self):
         if not self.is_running or not self._root:
             return
+
+        self._tick_count += 1
+
+        # Re-enforce click-through every tick (cheap: one GetWindowLongW + bitwise AND)
+        self._enforce_click_through()
 
         # Process incoming message queue
         while not self.msg_queue.empty():
@@ -164,7 +226,7 @@ class VisualOverlayHUD:
 
         self._render()
 
-        if self._root:
+        if self._root and self.is_running:
             self._root.after(16, self._on_tick)
 
     def _render(self):
@@ -323,10 +385,27 @@ class VisualOverlayHUD:
         if not self.enabled: return
         self.msg_queue.put(("set_mode", mode))
 
+    def _destroy_window(self):
+        """Safely tears down the Tk window and releases all resources."""
+        if self._root:
+            try:
+                self._root.destroy()
+            except Exception:
+                pass
+            self._root = None
+        self._canvas = None
+        self._hwnd = None
+
+    def _atexit_cleanup(self):
+        """Ensures the overlay is torn down when the interpreter exits."""
+        self.is_running = False
+        self._destroy_window()
+
     def close(self):
+        """Shuts down the overlay HUD cleanly."""
         self.is_running = False
         if self._root:
             try:
-                self._root.quit()
+                self._root.after(0, self._destroy_window)
             except Exception:
-                pass
+                self._destroy_window()

@@ -349,6 +349,45 @@ def focus_window(title_keyword: str) -> dict:
 
 
 @server.tool()
+def launch_app(
+    app_name: str,
+    args: list[str] | None = None,
+    working_dir: str | None = None,
+    wait_secs: float = 5.0
+) -> dict:
+    """
+    Opens/launches a desktop application by friendly name, executable name, full path, or URI.
+
+    Supported app names include common aliases:
+    - "notepad", "calculator", "paint", "terminal", "powershell", "cmd"
+    - "chrome", "firefox", "edge", "opera", "brave"
+    - "code" / "vscode", "word", "excel", "powerpoint", "outlook"
+    - "settings", "control panel", "task manager", "file explorer"
+    - "discord", "slack", "teams", "spotify", "vlc", "obs"
+
+    Also accepts:
+    - Full executable paths: "C:\\Program Files\\MyApp\\app.exe"
+    - Windows URIs: "ms-settings:", "ms-settings:display", "ms-settings:bluetooth"
+    - URLs: "https://example.com" (opens in default browser)
+    - Start Menu shortcut names: "Visual Studio 2022"
+
+    Returns the launched process PID and window info once the app's window appears.
+    """
+    try:
+        guardian.check_corner_failsafe()
+        return synthesizer.launch_application(
+            app_name=app_name,
+            args=args,
+            working_dir=working_dir,
+            wait_for_window_secs=wait_secs
+        )
+    except SafetyViolationError as se:
+        return {"success": False, "error": str(se), "safety_abort": True}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+@server.tool()
 def get_active_window() -> dict:
     """
     Returns information about currently focused window (title, HWND, process name, bounds, DPI scale).

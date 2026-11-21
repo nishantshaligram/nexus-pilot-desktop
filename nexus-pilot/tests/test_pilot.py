@@ -118,5 +118,72 @@ class TestSafetyGuardian(unittest.TestCase):
         print("[x] Window Target Boundary Isolation: Verified")
 
 
+class TestOverlayHUDSafety(unittest.TestCase):
+    """Verifies the overlay HUD click-through safety invariant."""
+
+    def test_enforce_click_through_contract(self):
+        """Verify that _enforce_click_through is callable and doesn't crash."""
+        from overlay_hud import VisualOverlayHUD
+        hud = VisualOverlayHUD(enabled=False)
+        # With no HWND, enforce should be a safe no-op
+        hud._hwnd = None
+        hud._enforce_click_through()
+        print("[x] Overlay HUD _enforce_click_through: Safe no-op verified")
+
+    def test_close_destroys_window(self):
+        """Verify close() transitions to is_running=False cleanly."""
+        from overlay_hud import VisualOverlayHUD
+        hud = VisualOverlayHUD(enabled=False)
+        hud.close()
+        self.assertFalse(hud.is_running)
+        self.assertIsNone(hud._root)
+        print("[x] Overlay HUD close: Clean destruction verified")
+
+
+class TestApplicationLauncher(unittest.TestCase):
+    """Verifies the application launcher resolution pipeline."""
+
+    def setUp(self):
+        self.synth = InputSynthesizer()
+
+    def test_alias_resolution(self):
+        """Verify well-known app aliases resolve to executable names."""
+        aliases = self.synth._APP_ALIASES
+        self.assertEqual(aliases.get("notepad"), "notepad.exe")
+        self.assertEqual(aliases.get("chrome"), "chrome.exe")
+        self.assertEqual(aliases.get("settings"), "ms-settings:")
+        self.assertEqual(aliases.get("code"), "code.exe")
+        print(f"[x] App Alias Map: {len(aliases)} aliases defined")
+
+    def test_registry_app_paths_search(self):
+        """Verify _find_in_app_paths does not crash and handles missing entries."""
+        result = self.synth._find_in_app_paths("NONEXISTENT_APP_XYZ_12345")
+        self.assertIsNone(result)
+        print("[x] App Paths Registry Search: Graceful miss verified")
+
+    def test_start_menu_shortcut_search(self):
+        """Verify _find_start_menu_shortcut does not crash and handles missing entries."""
+        result = self.synth._find_start_menu_shortcut("NONEXISTENT_APP_XYZ_12345")
+        self.assertIsNone(result)
+        print("[x] Start Menu Shortcut Search: Graceful miss verified")
+
+    def test_launch_notepad(self):
+        """Smoke-test launching Notepad (guaranteed to exist on Windows)."""
+        import subprocess
+        result = self.synth.launch_application("notepad", wait_for_window_secs=3.0)
+        self.assertTrue(result.get("success"), f"Failed to launch notepad: {result}")
+        self.assertIn("resolved_path", result)
+        print(f"[x] Launch Notepad: PID={result.get('pid')}, resolved={result.get('resolved_path')}")
+
+        # Clean up: close the notepad we just opened
+        if result.get("pid"):
+            try:
+                import psutil
+                p = psutil.Process(result["pid"])
+                p.terminate()
+            except Exception:
+                pass
+
+
 if __name__ == "__main__":
     unittest.main()
