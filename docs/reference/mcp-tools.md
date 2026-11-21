@@ -66,6 +66,15 @@ Sends Unicode text typing or modifier hotkey chords.
 Restores and brings a window to the foreground with Win32 focus handshake.
 - **Arguments**: `title_keyword` (str).
 
+#### `launch_app`
+Opens/launches a desktop application by friendly name, executable name, full path, or URI.
+- **Arguments**:
+  - `app_name` (str): Common name (e.g., `"notepad"`, `"chrome"`, `"code"`, `"settings"`), executable path, or URI (`"ms-settings:display"`).
+  - `args` (list[str], optional): Command-line arguments.
+  - `working_dir` (str, optional): Working directory for the process.
+  - `wait_secs` (float, default `5.0`): Seconds to wait for the application's window to appear.
+- **Returns**: `{ success: bool, app_name: str, resolved_path: str, pid: int, launched_via: str, window: { hwnd, title, pid, process_name } }`
+
 #### `get_active_window`
 Returns active window details (`title`, `hwnd`, `pid`, `process_name`, `rect`, `dpi_scale`).
 
@@ -75,7 +84,11 @@ Returns active window details (`title`, `hwnd`, `pid`, `process_name`, `rect`, `
 
 #### `set_safety_boundary`
 Locks click actuation exclusively within target window bounds.
-- **Arguments**: `enabled` (bool), `hwnd` (int, optional).
+- **Arguments**: `enabled` (bool), `hwnd` (int, optional), `window_title` (str, optional).
+
+#### `set_visual_hud`
+Enables or disables the real-time visual pilot cursor overlay, click ripple animations, and keystroke HUD.
+- **Arguments**: `enabled` (bool, default `true`).
 
 #### `reset_safety_failsafe`
 Clears the emergency stop flag so automation can resume.

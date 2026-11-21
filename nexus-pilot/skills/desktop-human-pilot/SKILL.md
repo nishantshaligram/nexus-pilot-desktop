@@ -58,11 +58,12 @@ The server dynamically selects the optimal actuation mode:
 
 ---
 
-## 2. Window Management Rules
+## 2. Window & Application Management Rules
 
-1. When calling `click_element(query="...", window_title="...")`, background invocation is attempted first if the window is in the background. If fallback to foreground is necessary, `focus_window` brings the application to the front.
-2. Verify active application context with `get_active_window()` before typing passwords or queries.
-3. If an application is minimized, `focus_window` will automatically restore it (`SW_RESTORE`).
+1. **Launching Applications**: Use `launch_app(app_name="...")` to start software that is not yet running (e.g. `launch_app(app_name="notepad")`, `launch_app(app_name="chrome")`, `launch_app(app_name="code")`, or `launch_app(app_name="settings")`).
+2. When calling `click_element(query="...", window_title="...")`, background invocation is attempted first if the window is in the background. If fallback to foreground is necessary, `focus_window` brings the application to the front.
+3. Verify active application context with `get_active_window()` before typing passwords or queries.
+4. If an application is minimized, `focus_window` will automatically restore it (`SW_RESTORE`).
 
 ---
 

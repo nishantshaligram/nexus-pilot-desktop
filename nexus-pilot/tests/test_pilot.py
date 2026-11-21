@@ -20,7 +20,7 @@ from safety_guard import SafetyGuardian, SafetyViolationError
 
 class TestInputSynthesizer(unittest.TestCase):
     def setUp(self):
-        self.synth = InputSynthesizer()
+        self.synth = InputSynthesizer(enable_hud=False)
 
     def test_screen_metrics(self):
         self.assertGreater(self.synth.virt_w, 0)
@@ -144,7 +144,7 @@ class TestApplicationLauncher(unittest.TestCase):
     """Verifies the application launcher resolution pipeline."""
 
     def setUp(self):
-        self.synth = InputSynthesizer()
+        self.synth = InputSynthesizer(enable_hud=False)
 
     def test_alias_resolution(self):
         """Verify well-known app aliases resolve to executable names."""
@@ -169,8 +169,7 @@ class TestApplicationLauncher(unittest.TestCase):
 
     def test_launch_notepad(self):
         """Smoke-test launching Notepad (guaranteed to exist on Windows)."""
-        import subprocess
-        result = self.synth.launch_application("notepad", wait_for_window_secs=3.0)
+        result = self.synth.launch_application("notepad", wait_for_window_secs=1.0)
         self.assertTrue(result.get("success"), f"Failed to launch notepad: {result}")
         self.assertIn("resolved_path", result)
         print(f"[x] Launch Notepad: PID={result.get('pid')}, resolved={result.get('resolved_path')}")
@@ -180,7 +179,8 @@ class TestApplicationLauncher(unittest.TestCase):
             try:
                 import psutil
                 p = psutil.Process(result["pid"])
-                p.terminate()
+                p.kill()
+                p.wait(timeout=1.0)
             except Exception:
                 pass
 
