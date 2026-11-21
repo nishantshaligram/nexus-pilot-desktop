@@ -157,7 +157,9 @@ class InputSynthesizer:
 
     def move_to(self, x: int, y: int, smooth: bool = True, steps: int = 6, is_interactive: bool = False) -> bool:
         """Moves cursor to target coordinates, animating the visual HUD and moving physical cursor."""
+        start_x, start_y = self.get_cursor_position()
         if self.hud:
+            self.hud.notify_action_start(start_x, start_y)
             self.hud.notify_move(x, y, is_interactive=is_interactive)
 
         if not smooth or steps <= 1:
@@ -233,10 +235,15 @@ class InputSynthesizer:
             if clicks > 1:
                 time.sleep(0.05)
 
+        if self.hud:
+            self.hud.notify_action_end()
+
         return True
 
     def drag_and_drop(self, start_x: int, start_y: int, end_x: int, end_y: int, speed_ms: int = 300) -> bool:
         """Performs a drag-and-drop gesture from start to destination."""
+        if self.hud:
+            self.hud.notify_action_start(start_x, start_y)
         self.move_to(start_x, start_y)
         time.sleep(0.05)
 
@@ -273,6 +280,8 @@ class InputSynthesizer:
             time=0, dwExtraInfo=None
         )
         self._send_inputs([inp_up])
+        if self.hud:
+            self.hud.notify_action_end()
         return True
 
     def scroll(self, direction: str = 'down', amount: int = 120, x: int | None = None, y: int | None = None) -> bool:
@@ -288,11 +297,16 @@ class InputSynthesizer:
             dwFlags=MOUSEEVENTF_WHEEL,
             time=0, dwExtraInfo=None
         )
-        return self._send_inputs([inp])
+        res = self._send_inputs([inp])
+        if self.hud:
+            self.hud.notify_action_end()
+        return res
 
     def type_text(self, text: str, delay_ms: int = 10) -> bool:
         """Types Unicode text directly into focused control, rendering floating keystroke HUD."""
         if self.hud:
+            cur_x, cur_y = self.get_cursor_position()
+            self.hud.notify_action_start(cur_x, cur_y)
             self.hud.notify_type(text)
 
         for char in text:
@@ -312,6 +326,10 @@ class InputSynthesizer:
             self._send_inputs([inp_down, inp_up])
             if delay_ms > 0:
                 time.sleep(delay_ms / 1000.0)
+
+        if self.hud:
+            self.hud.notify_action_end()
+
         return True
 
     def send_hotkey(self, keys: list[str]) -> bool:

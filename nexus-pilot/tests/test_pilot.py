@@ -119,7 +119,7 @@ class TestSafetyGuardian(unittest.TestCase):
 
 
 class TestOverlayHUDSafety(unittest.TestCase):
-    """Verifies the overlay HUD click-through safety invariant."""
+    """Verifies the overlay HUD click-through safety invariant and active-on-demand lifecycle."""
 
     def test_enforce_click_through_contract(self):
         """Verify that _enforce_click_through is callable and doesn't crash."""
@@ -129,6 +129,15 @@ class TestOverlayHUDSafety(unittest.TestCase):
         hud._hwnd = None
         hud._enforce_click_through()
         print("[x] Overlay HUD _enforce_click_through: Safe no-op verified")
+
+    def test_active_on_demand_initial_state(self):
+        """Verify that the cursor HUD is inactive/hidden by default."""
+        from overlay_hud import VisualOverlayHUD
+        hud = VisualOverlayHUD(enabled=False)
+        self.assertFalse(hud.is_active)
+        self.assertEqual(len(hud.ripples), 0)
+        self.assertEqual(hud.text_bubble_life, 0)
+        print("[x] Overlay HUD Active-on-Demand: Idle by default verified")
 
     def test_close_destroys_window(self):
         """Verify close() transitions to is_running=False cleanly."""

@@ -3,6 +3,12 @@ NexusPilot - Visual Pilot Overlay HUD
 Renders a transparent, click-through, top-most visual cursor, click animations,
 pointing hand on interactive controls, and keystroke visualization.
 
+DYNAMIC ACTIVE-ON-DEMAND LIFECYCLE:
+- Idle State: Completely hidden. Nothing is rendered on screen. Zero visual footprint.
+- Active State: Manifests smoothly when an action begins (move, click, type, drag).
+- Dissolve State: When work is done, trailing ripples and bubbles complete,
+  and the cursor vanishes cleanly after an inactivity cooldown.
+
 SAFETY: The overlay window MUST remain click-through at all times.
 WS_EX_TRANSPARENT is re-enforced every animation tick to prevent Tkinter
 or Windows from silently stripping it, which would create a fullscreen
@@ -44,9 +50,10 @@ MODE_IBEAM = "ibeam"
 class VisualOverlayHUD:
     """Provides human-visible cursor animations and keystroke HUD.
 
-    CRITICAL SAFETY INVARIANT: The overlay window is always click-through.
-    Every animation tick re-verifies WS_EX_TRANSPARENT on the native HWND.
-    If the flag is ever lost, it is immediately re-applied.
+    Implements a dynamic 'Active-on-Demand' lifecycle:
+    - Inactive / Idle: The canvas renders nothing at all (pristine desktop).
+    - Active: Awoken by any actuation action (glides, clicks, types).
+    - Dissolve: Automatically vanishes after 1.2s of inactivity once ripples finish.
     """
 
     def __init__(self, enabled: bool = True):
@@ -58,7 +65,12 @@ class VisualOverlayHUD:
         self._canvas = None
         self._hwnd = None  # Cached native window handle for style enforcement
 
-        # Current visual state
+        # Active-on-Demand Lifecycle State
+        self.is_active = False           # False by default -> completely hidden
+        self.last_activity = 0.0         # Timestamp of last user/agent action
+        self.idle_timeout = 1.2          # Seconds of inactivity before cursor vanishes
+
+        # Current visual coordinates
         self.cur_x = 100
         self.cur_y = 100
         self.target_x = 100
@@ -71,7 +83,7 @@ class VisualOverlayHUD:
         self.typed_text = ""
         self.text_bubble_life = 0
 
-        # Tick counter for periodic heavy checks
+        # Tick counter for periodic checks
         self._tick_count = 0
 
         # Register cleanup on interpreter shutdown
@@ -149,11 +161,6 @@ class VisualOverlayHUD:
         can silently strip WS_EX_TRANSPARENT when it handles window position changes,
         focus events, or attribute updates. If the flag is ever lost, the fullscreen
         overlay becomes an invisible input-blocking wall.
-
-        Called:
-        - At startup (twice: before and after -topmost)
-        - Every animation tick (fast bitwise check, only SetWindowLongW if needed)
-        - On <Configure> events (window position/size changes)
         """
         if not self._hwnd:
             return
@@ -173,6 +180,7 @@ class VisualOverlayHUD:
             return
 
         self._tick_count += 1
+        now = time.monotonic()
 
         # Re-enforce click-through every tick (cheap: one GetWindowLongW + bitwise AND)
         self._enforce_click_through()
@@ -182,11 +190,37 @@ class VisualOverlayHUD:
             try:
                 msg = self.msg_queue.get_nowait()
                 cmd = msg[0]
-                if cmd == "move":
+
+                if cmd == "action_start":
+                    _, sx, sy = msg
+                    if not self.is_active:
+                        self.cur_x = sx
+                        self.cur_y = sy
+                        self.target_x = sx
+                        self.target_y = sy
+                    self.is_active = True
+                    self.last_activity = now
+
+                elif cmd == "action_end":
+                    self.last_activity = now
+
+                elif cmd == "hide":
+                    self.is_active = False
+                    self.ripples.clear()
+                    self.target_box = None
+                    self.text_bubble_life = 0
+
+                elif cmd == "move":
                     _, tx, ty, mode = msg
+                    if not self.is_active:
+                        self.cur_x = tx
+                        self.cur_y = ty
                     self.target_x = tx
                     self.target_y = ty
                     self.cur_mode = mode
+                    self.is_active = True
+                    self.last_activity = now
+
                 elif cmd == "click":
                     _, cx, cy, button = msg
                     self.cur_x = cx
@@ -196,33 +230,57 @@ class VisualOverlayHUD:
                         "x": cx, "y": cy, "r": 8, "max_r": 48,
                         "color": "#00F0FF" if button == "left" else "#FF0077"
                     })
+                    self.is_active = True
+                    self.last_activity = now
+
                 elif cmd == "type":
                     _, text = msg
                     self.cur_mode = MODE_IBEAM
                     self.typed_text = (self.typed_text + text)[-30:]
                     self.text_bubble_life = 60  # ~1 second
+                    self.is_active = True
+                    self.last_activity = now
+
                 elif cmd == "lock_element":
                     _, rect, label = msg
                     self.target_box = {
                         "rect": rect, "label": label, "life": 45
                     }
+                    self.is_active = True
+                    self.last_activity = now
+
                 elif cmd == "set_mode":
                     _, mode = msg
                     self.cur_mode = mode
+                    self.last_activity = now
+
             except queue.Empty:
                 break
 
-        # Smooth glide cursor toward target
-        dx = self.target_x - self.cur_x
-        dy = self.target_y - self.cur_y
-        dist = math.hypot(dx, dy)
-        if dist > 1:
-            step = max(3.0, dist * 0.35)
-            self.cur_x += (dx / dist) * step
-            self.cur_y += (dy / dist) * step
-        else:
-            self.cur_x = self.target_x
-            self.cur_y = self.target_y
+        # Check Active-on-Demand lifecycle state
+        has_pending_animations = bool(
+            self.ripples or 
+            (self.target_box and self.target_box["life"] > 0) or 
+            self.text_bubble_life > 0
+        )
+
+        if self.is_active:
+            # Check if idle timeout has expired and animations have finished
+            if (now - self.last_activity > self.idle_timeout) and not has_pending_animations:
+                self.is_active = False
+
+        if self.is_active:
+            # Smooth glide cursor toward target while active
+            dx = self.target_x - self.cur_x
+            dy = self.target_y - self.cur_y
+            dist = math.hypot(dx, dy)
+            if dist > 1:
+                step = max(3.0, dist * 0.35)
+                self.cur_x += (dx / dist) * step
+                self.cur_y += (dy / dist) * step
+            else:
+                self.cur_x = self.target_x
+                self.cur_y = self.target_y
 
         self._render()
 
@@ -234,6 +292,11 @@ class VisualOverlayHUD:
             return
 
         self._canvas.delete("all")
+
+        # When idle, draw nothing! Zero artifacts on user's screen.
+        if not self.is_active:
+            return
+
         x, y = int(self.cur_x), int(self.cur_y)
 
         # 1. Render Element Target Lock Box if active
@@ -364,6 +427,21 @@ class VisualOverlayHUD:
         self._canvas.create_line(x - 5, y + 10, x + 5, y + 10, fill="#38BDF8", width=2.5)
 
     # Public API called by InputSynthesizer / MCP tools
+    def notify_action_start(self, x: int, y: int):
+        """Signals start of an actuation sequence at (x, y). Awakens the HUD."""
+        if not self.enabled: return
+        self.msg_queue.put(("action_start", x, y))
+
+    def notify_action_end(self):
+        """Signals completion of an actuation sequence. Starts the idle countdown."""
+        if not self.enabled: return
+        self.msg_queue.put(("action_end",))
+
+    def notify_hide(self):
+        """Immediately hides the visual cursor overlay."""
+        if not self.enabled: return
+        self.msg_queue.put(("hide",))
+
     def notify_move(self, x: int, y: int, is_interactive: bool = False):
         if not self.enabled: return
         mode = MODE_POINTER if is_interactive else MODE_ARROW
