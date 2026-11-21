@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
+import readline from 'node:readline';
 import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -64,7 +65,45 @@ function updateMcpJson(filePath, serverDef, agentName) {
   }
 }
 
-export function runInstaller(targetAgent = 'all') {
+export async function promptTargetAgent() {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+
+  console.log('\x1b[33mNo target environment specified. Choose an option:\x1b[0m');
+  console.log('  [1] All (Antigravity, Claude, Cursor, Windsurf) [Default]');
+  console.log('  [2] Google Antigravity Only');
+  console.log('  [3] Claude Only (Desktop & Code CLI)');
+  console.log('  [4] Cursor IDE Only');
+  console.log('  [5] Windsurf Only');
+  console.log('  [6] Antigravity + Claude Only\n');
+
+  return new Promise((resolve) => {
+    rl.question('Enter choice [1-6] (Press Enter for 1): ', (answer) => {
+      rl.close();
+      const choice = answer.trim();
+      switch (choice) {
+        case '2': resolve('antigravity'); break;
+        case '3': resolve('claude'); break;
+        case '4': resolve('cursor'); break;
+        case '5': resolve('windsurf'); break;
+        case '6': resolve('antigravity+claude'); break;
+        default: resolve('all'); break;
+      }
+    });
+  });
+}
+
+export async function runInstaller(targetAgent = null) {
+  if (!targetAgent) {
+    if (process.stdin.isTTY) {
+      targetAgent = await promptTargetAgent();
+    } else {
+      targetAgent = 'all';
+    }
+  }
+
   const home = getHomeDir();
   const projectRoot = path.resolve(__dirname, '..');
   const serverPath = path.join(projectRoot, 'nexus-pilot', 'server', 'pilot_server.py').replace(/\\/g, '/');
@@ -84,8 +123,8 @@ export function runInstaller(targetAgent = 'all') {
   console.log(`Target: \x1b[1m${targetAgent}\x1b[0m\n`);
 
   // 1. Antigravity
-  if (normalizedTarget === 'all' || normalizedTarget === 'antigravity') {
-    console.log('\x1b[36m[1] Installing for Google Antigravity...\x1b[0m');
+  if (normalizedTarget === 'all' || normalizedTarget === 'antigravity' || normalizedTarget === 'antigravity+claude') {
+    console.log('\x1b[36m[*] Installing for Google Antigravity...\x1b[0m');
     const pluginTargetDir = path.join(home, '.gemini', 'config', 'plugins', 'nexus-pilot');
     try {
       copyFolderRecursive(pluginSourceDir, pluginTargetDir);
@@ -99,8 +138,8 @@ export function runInstaller(targetAgent = 'all') {
   }
 
   // 2. Claude (Claude Code CLI & Desktop)
-  if (normalizedTarget === 'all' || normalizedTarget === 'claude' || normalizedTarget === 'claude-code') {
-    console.log('\n\x1b[36m[2] Installing for Claude (Code & Desktop)...\x1b[0m');
+  if (normalizedTarget === 'all' || normalizedTarget === 'claude' || normalizedTarget === 'claude-code' || normalizedTarget === 'antigravity+claude') {
+    console.log('\n\x1b[36m[*] Installing for Claude (Code & Desktop)...\x1b[0m');
     const claudeCodePath = path.join(home, '.claude.json');
     updateMcpJson(claudeCodePath, mcpServerDef, 'Claude Code CLI');
 
@@ -111,14 +150,14 @@ export function runInstaller(targetAgent = 'all') {
 
   // 3. Cursor
   if (normalizedTarget === 'all' || normalizedTarget === 'cursor') {
-    console.log('\n\x1b[36m[3] Installing for Cursor IDE...\x1b[0m');
+    console.log('\n\x1b[36m[*] Installing for Cursor IDE...\x1b[0m');
     const cursorMcpPath = path.join(home, '.cursor', 'mcp.json');
     updateMcpJson(cursorMcpPath, mcpServerDef, 'Cursor Global MCP');
   }
 
   // 4. Windsurf
   if (normalizedTarget === 'all' || normalizedTarget === 'windsurf') {
-    console.log('\n\x1b[36m[4] Installing for Windsurf / Codeium...\x1b[0m');
+    console.log('\n\x1b[36m[*] Installing for Windsurf / Codeium...\x1b[0m');
     const windsurfPath = path.join(home, '.codeium', 'windsurf', 'mcp_config.json');
     updateMcpJson(windsurfPath, mcpServerDef, 'Windsurf Global MCP');
   }

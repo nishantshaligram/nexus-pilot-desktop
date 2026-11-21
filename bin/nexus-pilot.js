@@ -45,8 +45,8 @@ function parseFlag(flagName) {
 
 switch (command) {
   case 'install': {
-    const target = parseFlag('--agent') || parseFlag('--ide') || 'all';
-    runInstaller(target);
+    const target = parseFlag('--agent') || parseFlag('--ide');
+    await runInstaller(target);
     break;
   }
   case 'doctor':

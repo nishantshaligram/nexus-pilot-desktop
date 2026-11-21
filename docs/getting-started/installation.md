@@ -14,18 +14,37 @@ NexusPilot runs locally on Windows 10 and 11 workstations without requiring exte
 
 ## 2. Automated 1-Click Installation
 
-Run the universal agent installer script:
+### A. Interactive Menu (Zero Flags)
+When double-clicking `nexus-pilot/install-agents.bat` or running without arguments, an interactive menu allows you to choose your exact target environment:
 
-```powershell
-powershell -ExecutionPolicy Bypass -File nexus-pilot/scripts/install-agents.ps1
+```text
+No target environment specified. Choose an option:
+  [1] All (Antigravity, Claude, Cursor, Windsurf) [Default]
+  [2] Google Antigravity Only
+  [3] Claude Only (Desktop & Code CLI)
+  [4] Cursor IDE Only
+  [5] Windsurf Only
+  [6] Antigravity + Claude Only
+Enter choice [1-6] (Press Enter for 1):
 ```
 
-Or double-click `nexus-pilot/install-agents.bat` in Windows Explorer.
+### B. Command-Line Installation (With Flags)
+For automated CI or scripted setups, pass the target agent directly:
 
-The installer will:
-1. Detect your local Python binary.
-2. Install dependencies from `nexus-pilot/requirements.txt`.
-3. Configure MCP settings for Antigravity, Claude Code, Claude Desktop, Cursor, and Windsurf.
+```powershell
+# Install for a specific agent
+powershell -ExecutionPolicy Bypass -File nexus-pilot/scripts/install-agents.ps1 -TargetAgent Antigravity
+powershell -ExecutionPolicy Bypass -File nexus-pilot/scripts/install-agents.ps1 -TargetAgent Claude
+powershell -ExecutionPolicy Bypass -File nexus-pilot/scripts/install-agents.ps1 -TargetAgent Cursor
+powershell -ExecutionPolicy Bypass -File nexus-pilot/scripts/install-agents.ps1 -TargetAgent Windsurf
+```
+
+Or using the npm CLI:
+```bash
+npx nexus-pilot install
+npx nexus-pilot install --agent antigravity
+npx nexus-pilot install --ide claude
+```
 
 ---
 

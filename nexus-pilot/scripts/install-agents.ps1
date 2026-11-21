@@ -3,14 +3,14 @@
     NexusPilot Universal Multi-Agent Installer
 .DESCRIPTION
     Configures and installs NexusPilot for Antigravity, Claude (Code & Desktop),
-    Cursor, Windsurf, and Codex with zero manual JSON editing.
+    Cursor, and Windsurf with zero manual JSON editing.
+    Includes an interactive menu when invoked with zero flags.
 .PARAMETER TargetAgent
-    Target agent to install for: 'All', 'Antigravity', 'Claude', 'Cursor', 'Windsurf'. Defaults to 'All'.
+    Target agent to install for: 'All', 'Antigravity', 'Claude', 'Cursor', 'Windsurf', 'Antigravity+Claude'.
 #>
 
 param(
-    [ValidateSet("All", "Antigravity", "Claude", "Cursor", "Windsurf")]
-    [string]$TargetAgent = "All"
+    [string]$TargetAgent = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -38,6 +38,29 @@ Write-Host "   NexusPilot Universal Agent MCP & Plugin Installer   " -Foreground
 Write-Host "=======================================================" -ForegroundColor Cyan
 Write-Host "Server Script: $ServerScript" -ForegroundColor Gray
 Write-Host "Python Binary: $PyExe`n" -ForegroundColor Gray
+
+# Interactive Menu when invoked with zero flags
+if ([string]::IsNullOrWhiteSpace($TargetAgent)) {
+    Write-Host "No target environment specified. Choose an option:" -ForegroundColor Yellow
+    Write-Host "  [1] All (Antigravity, Claude, Cursor, Windsurf) [Default]" -ForegroundColor White
+    Write-Host "  [2] Google Antigravity Only" -ForegroundColor White
+    Write-Host "  [3] Claude Only (Desktop & Code CLI)" -ForegroundColor White
+    Write-Host "  [4] Cursor IDE Only" -ForegroundColor White
+    Write-Host "  [5] Windsurf Only" -ForegroundColor White
+    Write-Host "  [6] Antigravity + Claude Only" -ForegroundColor White
+    Write-Host ""
+    
+    $choice = Read-Host "Enter choice [1-6] (Press Enter for 1)"
+    switch ($choice.Trim()) {
+        "2" { $TargetAgent = "Antigravity" }
+        "3" { $TargetAgent = "Claude" }
+        "4" { $TargetAgent = "Cursor" }
+        "5" { $TargetAgent = "Windsurf" }
+        "6" { $TargetAgent = "Antigravity+Claude" }
+        Default { $TargetAgent = "All" }
+    }
+    Write-Host "`nSelected Target: $TargetAgent`n" -ForegroundColor Cyan
+}
 
 function Update-McpConfigFile {
     param(
@@ -80,8 +103,8 @@ function Update-McpConfigFile {
 }
 
 # 1. Antigravity Installation
-if ($TargetAgent -eq "All" -or $TargetAgent -eq "Antigravity") {
-    Write-Host "[1/4] Installing for Google Antigravity..." -ForegroundColor Cyan
+if ($TargetAgent -in @("All", "Antigravity", "Antigravity+Claude")) {
+    Write-Host "[*] Installing for Google Antigravity..." -ForegroundColor Cyan
     $PluginTargetDir = "$HOME/.gemini/config/plugins/nexus-pilot"
     try {
         if (-not (Test-Path $PluginTargetDir)) {
@@ -100,8 +123,8 @@ if ($TargetAgent -eq "All" -or $TargetAgent -eq "Antigravity") {
 }
 
 # 2. Claude (Claude Code & Claude Desktop)
-if ($TargetAgent -eq "All" -or $TargetAgent -eq "Claude") {
-    Write-Host "`n[2/4] Installing for Claude..." -ForegroundColor Cyan
+if ($TargetAgent -in @("All", "Claude", "Antigravity+Claude")) {
+    Write-Host "`n[*] Installing for Claude..." -ForegroundColor Cyan
     # A. Claude Code CLI (~/.claude.json)
     $ClaudeCodePath = "$HOME/.claude.json"
     Update-McpConfigFile -FilePath $ClaudeCodePath -AgentName "Claude Code CLI"
@@ -112,15 +135,15 @@ if ($TargetAgent -eq "All" -or $TargetAgent -eq "Claude") {
 }
 
 # 3. Cursor IDE
-if ($TargetAgent -eq "All" -or $TargetAgent -eq "Cursor") {
-    Write-Host "`n[3/4] Installing for Cursor IDE..." -ForegroundColor Cyan
+if ($TargetAgent -in @("All", "Cursor")) {
+    Write-Host "`n[*] Installing for Cursor IDE..." -ForegroundColor Cyan
     $CursorMcpPath = "$HOME/.cursor/mcp.json"
     Update-McpConfigFile -FilePath $CursorMcpPath -AgentName "Cursor Global MCP"
 }
 
-# 4. Windsurf / Codex
-if ($TargetAgent -eq "All" -or $TargetAgent -eq "Windsurf") {
-    Write-Host "`n[4/4] Installing for Windsurf / Codeium..." -ForegroundColor Cyan
+# 4. Windsurf / Codeium
+if ($TargetAgent -in @("All", "Windsurf")) {
+    Write-Host "`n[*] Installing for Windsurf / Codeium..." -ForegroundColor Cyan
     $WindsurfPath = "$HOME/.codeium/windsurf/mcp_config.json"
     Update-McpConfigFile -FilePath $WindsurfPath -AgentName "Windsurf Global MCP"
 }
