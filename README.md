@@ -1,7 +1,7 @@
-# Project NexusPilot
+# NexusPilot: Desktop 🖥️⚡
 
 <p align="center">
-  <img src="docs/assets/brand_logo.jpg" width="460" alt="Project NexusPilot Banner" />
+  <img src="docs/assets/brand_logo.jpg" width="460" alt="NexusPilot Desktop Banner" />
 </p>
 
 <p align="center">
@@ -10,8 +10,8 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/nishantshaligram/NexusPilot/actions"><img src="https://img.shields.io/github/actions/workflow/status/nishantshaligram/NexusPilot/ci.yml?branch=main&label=CI&logo=github" alt="CI Status" /></a>
-  <a href="https://nishantshaligram.github.io/NexusPilot/"><img src="https://img.shields.io/badge/Docs-VitePress%20Modern%20UI-38BDF8?logo=vitepress" alt="Documentation" /></a>
+  <a href="https://github.com/nishantshaligram/nexus-pilot-desktop/actions"><img src="https://img.shields.io/github/actions/workflow/status/nishantshaligram/nexus-pilot-desktop/ci.yml?branch=main&label=CI&logo=github" alt="CI Status" /></a>
+  <a href="https://nishantshaligram.github.io/nexus-pilot-desktop/"><img src="https://img.shields.io/badge/Docs-VitePress%20Modern%20UI-38BDF8?logo=vitepress" alt="Documentation" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License: Apache 2.0" /></a>
   <img src="https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6?logo=windows" alt="Platform: Windows" />
   <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python" alt="Python 3.10+" />
@@ -21,7 +21,7 @@
 
 ## Architecture Overview
 
-NexusPilot bridges the gap between text-native coding agents and native Windows software (IDEs, database clients, Figma Desktop, settings consoles) using **Dual-Modal Perception** and **Win32 `SendInput` Kinematics**:
+**NexusPilot: Desktop** bridges the gap between text-native coding agents and native Windows software (IDEs, database clients, Figma Desktop, settings consoles) using **Dual-Modal Perception** and **Win32 `SendInput` Kinematics**:
 
 ```mermaid
 flowchart TD
@@ -118,13 +118,13 @@ python nexus-pilot/tests/test_pilot.py
 
 ## Frequently Asked Questions (FAQ)
 
-### What is NexusPilot?
-NexusPilot is an open-source Desktop Computer-Use automation engine delivered as a Model Context Protocol (MCP) server and Google Antigravity plugin. It enables AI coding agents to control native Windows desktop applications using mouse actuation, keyboard typing, and accessibility perception.
+### What is NexusPilot: Desktop?
+**NexusPilot: Desktop** is an open-source Desktop Computer-Use automation engine delivered as a Model Context Protocol (MCP) server and Google Antigravity plugin. It enables AI coding agents to control native Windows desktop applications using mouse actuation, keyboard typing, and accessibility perception.
 
-### How does NexusPilot compare to Anthropic Computer Use?
-Anthropic Computer Use runs inside isolated cloud Docker containers with pure vision models. NexusPilot runs **100% locally on your Windows developer workstation** and uses **Dual-Modal Perception**: it combines screen capture with the Windows UI Automation (UIA) accessibility tree to achieve 100% click precision without coordinate guessing.
+### How does NexusPilot: Desktop compare to Anthropic Computer Use?
+Anthropic Computer Use runs inside isolated cloud Docker containers with pure vision models. **NexusPilot: Desktop** runs **100% locally on your Windows developer workstation** and uses **Dual-Modal Perception**: it combines screen capture with the Windows UI Automation (UIA) accessibility tree to achieve 100% click precision without coordinate guessing.
 
-### Which AI coding agents work with NexusPilot?
+### Which AI coding agents work with NexusPilot: Desktop?
 NexusPilot adheres to the open Model Context Protocol (MCP) standard and is verified to work out-of-the-box with **Google Antigravity**, **Claude Code CLI**, **Claude Desktop**, **Cursor IDE**, and **Windsurf**.
 
 ### How does NexusPilot prevent multi-monitor and DPI scaling errors?
@@ -137,11 +137,11 @@ If an automated agent ever exhibits unexpected behavior, slam the physical mouse
 
 ## 🌐 The NexusPilot Autonomous Agent Suite
 
-NexusPilot Desktop is the interactive Computer-Use foundation of the broader **NexusPilot Suite** for AI coding agents:
+**NexusPilot: Desktop** is the interactive Computer-Use foundation of the broader **NexusPilot Suite** for AI coding agents:
 
 | Component | Role | GitHub Repository | Description |
 | :--- | :--- | :--- | :--- |
-| 🖥️ **NexusPilot Desktop** | **The Hands** | [`nishantshaligram/NexusPilot`](https://github.com/nishantshaligram/NexusPilot) | Universal Windows UI Automation, dual-modal perception, mouse actuation & foreground visual HUD. |
+| 🖥️ **NexusPilot: Desktop** | **The Hands** | [`nishantshaligram/nexus-pilot-desktop`](https://github.com/nishantshaligram/nexus-pilot-desktop) | Universal Windows UI Automation, dual-modal perception, mouse actuation & foreground visual HUD. |
 | 🧠 **NexusPilot Cortex** | **The Brain** | [`nishantshaligram/nexus-pilot-cortex`](https://github.com/nishantshaligram/nexus-pilot-cortex) | Cognitive telemetry badging, persistent long-term memory (NexusMem), and adaptive context compression. |
 | ⚡ **NexusPilot Fleet** | **The Grid** | [`nishantshaligram/nexus-pilot-fleet`](https://github.com/nishantshaligram/nexus-pilot-fleet) | Distributed multi-agent swarm orchestrator, zero-collision Git worktree multiplexing, DAG scheduling & Two-Key consensus. |
 | 📊 **NexusPilot Benchmarks** | **Validation** | [`nishantshaligram/nexus-pilot-benchmarks`](https://github.com/nishantshaligram/nexus-pilot-benchmarks) | Reproducible empirical benchmark harness and competitive leaderboard against industry baselines. |
@@ -151,7 +151,7 @@ NexusPilot Desktop is the interactive Computer-Use foundation of the broader **N
 ## Documentation
 
 Full documentation, architecture specifications, and agent guides are available at:
-👉 **[https://nishantshaligram.github.io/NexusPilot/](https://nishantshaligram.github.io/NexusPilot/)**
+👉 **[https://nishantshaligram.github.io/nexus-pilot-desktop/](https://nishantshaligram.github.io/nexus-pilot-desktop/)**
 
 ---
 

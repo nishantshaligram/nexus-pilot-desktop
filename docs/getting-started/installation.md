@@ -41,9 +41,9 @@ powershell -ExecutionPolicy Bypass -File nexus-pilot/scripts/install-agents.ps1 
 
 Or using the npm CLI:
 ```bash
-npx nexus-pilot install
-npx nexus-pilot install --agent antigravity
-npx nexus-pilot install --ide claude
+npx nexus-pilot-desktop install
+npx nexus-pilot-desktop install --agent antigravity
+npx nexus-pilot-desktop install --ide claude
 ```
 
 ---
@@ -51,8 +51,8 @@ npx nexus-pilot install --ide claude
 ## 3. Manual Installation via Pip
 
 ```bash
-git clone https://github.com/nishantshaligram/NexusPilot.git
-cd NexusPilot
+git clone https://github.com/nishantshaligram/nexus-pilot-desktop.git
+cd nexus-pilot-desktop
 pip install --user -r nexus-pilot/requirements.txt
 ```
 

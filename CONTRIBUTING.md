@@ -1,6 +1,6 @@
-# Contributing to NexusPilot
+# Contributing to NexusPilot: Desktop
 
-Thank you for your interest in contributing to **Project NexusPilot**!
+Thank you for your interest in contributing to **NexusPilot: Desktop**!
 
 ## Development Setup
 
@@ -11,8 +11,8 @@ Thank you for your interest in contributing to **Project NexusPilot**!
 
 2. **Clone and Install**:
    ```powershell
-   git clone https://github.com/nishantshaligram/NexusPilot.git
-   cd NexusPilot
+   git clone https://github.com/nishantshaligram/nexus-pilot-desktop.git
+   cd nexus-pilot-desktop
    pip install --user -r nexus-pilot/requirements.txt
    ```
 

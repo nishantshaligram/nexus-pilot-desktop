@@ -2,19 +2,19 @@
 layout: home
 
 hero:
-  name: "NexusPilot"
+  name: "NexusPilot: Desktop"
   text: "Universal Desktop Computer-Use"
   tagline: "Empower AI agents with human-grade vision, mouse actuation, keyboard input, and Windows UI Automation."
   image:
     src: /assets/brand_logo.jpg
-    alt: NexusPilot Logo
+    alt: NexusPilot Desktop Logo
   actions:
     - theme: brand
       text: Get Started →
       link: /getting-started/quickstart
     - theme: alt
       text: View on GitHub
-      link: https://github.com/nishantshaligram/NexusPilot
+      link: https://github.com/nishantshaligram/nexus-pilot-desktop
 
 features:
   - icon: 🎯
@@ -47,3 +47,16 @@ NexusPilot implements **Per-Monitor DPI Awareness v2**. It normalizes coordinate
 
 ### How does the emergency stop failsafe work?
 If an automated agent ever exhibits unexpected behavior, slam the physical mouse cursor into the top-left corner `(0, 0)`. The hardware failsafe immediately pauses all synthetic input and aborts the task.
+
+---
+
+## 🌐 The NexusPilot Suite
+
+**NexusPilot: Desktop** is the interactive Computer-Use foundation of the broader **NexusPilot Suite** for AI coding agents:
+
+| Component | Role | GitHub Repository | Description |
+| :--- | :--- | :--- | :--- |
+| 🖥️ **NexusPilot: Desktop** | **The Hands** | [`nishantshaligram/nexus-pilot-desktop`](https://github.com/nishantshaligram/nexus-pilot-desktop) | Universal Windows UI Automation, dual-modal perception, mouse actuation & foreground visual HUD. |
+| 🧠 **NexusPilot Cortex** | **The Brain** | [`nishantshaligram/nexus-pilot-cortex`](https://github.com/nishantshaligram/nexus-pilot-cortex) | Cognitive telemetry badging, persistent long-term memory (NexusMem), and adaptive context compression. |
+| ⚡ **NexusPilot Fleet** | **The Grid** | [`nishantshaligram/nexus-pilot-fleet`](https://github.com/nishantshaligram/nexus-pilot-fleet) | Distributed multi-agent swarm orchestrator, zero-collision Git worktree multiplexing, DAG scheduling & Two-Key consensus. |
+| 📊 **NexusPilot Benchmarks** | **Validation** | [`nishantshaligram/nexus-pilot-benchmarks`](https://github.com/nishantshaligram/nexus-pilot-benchmarks) | Reproducible empirical benchmark harness and competitive leaderboard against industry baselines. |

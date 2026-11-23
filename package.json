@@ -1,10 +1,11 @@
 {
-  "name": "nexus-pilot",
+  "name": "nexus-pilot-desktop",
   "version": "1.0.0",
   "description": "Universal Desktop Computer-Use MCP Suite & Antigravity Plugin for AI Coding Agents",
   "type": "module",
   "main": "./src/index.js",
   "bin": {
+    "nexus-pilot-desktop": "./bin/nexus-pilot.js",
     "nexus-pilot": "./bin/nexus-pilot.js"
   },
   "files": [
@@ -42,11 +43,11 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/nishantshaligram/NexusPilot.git"
+    "url": "https://github.com/nishantshaligram/nexus-pilot-desktop.git"
   },
-  "homepage": "https://nishantshaligram.github.io/NexusPilot/",
+  "homepage": "https://nishantshaligram.github.io/nexus-pilot-desktop/",
   "bugs": {
-    "url": "https://github.com/nishantshaligram/NexusPilot/issues"
+    "url": "https://github.com/nishantshaligram/nexus-pilot-desktop/issues"
   },
   "devDependencies": {
     "vitepress": "^1.5.0"

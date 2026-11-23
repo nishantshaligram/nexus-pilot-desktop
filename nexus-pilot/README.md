@@ -1,4 +1,4 @@
-# Project NexusPilot: Universal Desktop Computer-Use MCP Suite
+# NexusPilot: Desktop 🖥️⚡
 
 <p align="center">
   <img src="assets/brand_logo.jpg" width="460" alt="NexusPilot Logo" />
@@ -8,7 +8,7 @@
   <strong>Universal Desktop Computer-Use MCP Suite & Antigravity Plugin</strong>
 </p>
 
-**Project NexusPilot** is a production-grade **Desktop Human-Grade Automation Suite** delivered as a cross-compatible **Model Context Protocol (MCP) Server** and an **Antigravity Plugin & Skill**. It equips AI agents with human-like vision, mouse control, keyboard input, and native Windows accessibility perception.
+**NexusPilot: Desktop** is a production-grade **Desktop Human-Grade Automation Suite** delivered as a cross-compatible **Model Context Protocol (MCP) Server** and an **Antigravity Plugin & Skill**. It equips AI agents with human-like vision, mouse control, keyboard input, and native Windows accessibility perception.
 
 ---
 

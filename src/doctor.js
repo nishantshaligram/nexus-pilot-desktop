@@ -3,7 +3,7 @@ import os from 'node:os';
 
 export function runDoctor() {
   console.log('\n\x1b[36m=======================================================');
-  console.log('   Project NexusPilot - Environment Diagnostic Probe   ');
+  console.log('   NexusPilot: Desktop - Environment Diagnostic Probe  ');
   console.log('=======================================================\x1b[0m\n');
 
   // 1. Operating System

@@ -1,14 +1,14 @@
 {
   "name": "nexus-pilot",
-  "displayName": "NexusPilot Desktop Computer-Use",
+  "displayName": "NexusPilot: Desktop",
   "description": "Universal Desktop Computer-Use Suite for Windows. Provides human-grade vision, mouse, keyboard, and Windows UI Automation control.",
   "version": "1.0.0",
   "author": {
-    "name": "Project NexusPilot",
-    "url": "https://github.com/Personal/ComputerUse"
+    "name": "Nishant Shaligram",
+    "url": "https://github.com/nishantshaligram/nexus-pilot-desktop"
   },
-  "homepage": "https://github.com/Personal/ComputerUse",
-  "repository": "https://github.com/Personal/ComputerUse",
+  "homepage": "https://nishantshaligram.github.io/nexus-pilot-desktop/",
+  "repository": "https://github.com/nishantshaligram/nexus-pilot-desktop",
   "logo": "assets/logo.svg",
   "suggestedPrompts": [
     "Open Windows Calculator and calculate 42 * 1337",

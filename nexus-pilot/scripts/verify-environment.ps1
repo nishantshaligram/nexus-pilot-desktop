@@ -9,7 +9,7 @@
 $ErrorActionPreference = "Continue"
 
 Write-Host "`n=======================================================" -ForegroundColor Cyan
-Write-Host "   Project NexusPilot - Environment Diagnostic Probe   " -ForegroundColor Cyan
+Write-Host "   NexusPilot: Desktop - Environment Diagnostic Probe   " -ForegroundColor Cyan
 Write-Host "=======================================================`n" -ForegroundColor Cyan
 
 # 1. Operating System
