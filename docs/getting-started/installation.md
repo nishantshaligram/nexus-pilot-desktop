@@ -1,6 +1,6 @@
 # Installation & Environment Setup
 
-NexusPilot runs locally on Windows 10 and 11 workstations without requiring external cloud containers.
+**NexusPilot: Desktop** runs locally on Windows 10 and 11 workstations without requiring external cloud containers.
 
 ---
 

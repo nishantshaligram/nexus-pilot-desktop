@@ -27,13 +27,13 @@ print(f'Detected {len(tree[\"elements\"])} interactive UI controls on screen!')
 
 ## 2. Example Agent Prompts
 
-Once NexusPilot is enabled in your agent (Antigravity, Claude, or Cursor), try these real-world instructions:
+Once **NexusPilot: Desktop** is enabled in your agent (Antigravity, Claude, or Cursor), try these real-world instructions:
 
 ### A. Windows Calculator Automation
 > *"Open Windows Calculator, click 7, click multiply, click 8, click equals, and verify the displayed result."*
 
 ### B. Notepad Note Creation
-> *"Open Notepad, type 'Hello from NexusPilot', and save the file to my Desktop as test.txt."*
+> *"Open Notepad, type 'Hello from NexusPilot: Desktop', and save the file to my Desktop as test.txt."*
 
 ### C. Developer Thick Client Navigation
 > *"Bring DBeaver to the front, click Test Connection, and tell me if the database ping succeeded."*
@@ -44,4 +44,4 @@ Once NexusPilot is enabled in your agent (Antigravity, Claude, or Cursor), try t
 
 If an agent ever makes an unintended action:
 - **Slam your physical mouse into the top-left corner `(0, 0)`.**
-- NexusPilot will immediately trigger the hardware failsafe, halt input, and notify the agent to abort.
+- **NexusPilot: Desktop** will immediately trigger the hardware failsafe, halt input, and notify the agent to abort.

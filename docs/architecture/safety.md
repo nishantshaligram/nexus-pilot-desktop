@@ -16,7 +16,7 @@ To prevent an AI agent from accidentally clicking into personal messaging apps (
 
 ## 2. Hardware Corner Failsafe
 
-NexusPilot monitors physical mouse cursor coordinates prior to executing any synthetic actuation:
+**NexusPilot: Desktop** monitors physical mouse cursor coordinates prior to executing any synthetic actuation:
 
 - **Trigger**: Slamming the physical mouse cursor into the top-left corner `(0, 0)` immediately halts all automation.
 - **Enforcement**: Any in-flight or subsequent MCP tool call aborts with `safety_abort: true`.
@@ -36,7 +36,7 @@ If detected, the engine flags `high_risk_detected: true` and requests explicit H
 
 ## 4. Unblocked User Experience
 
-NexusPilot is designed for seamless human-agent coexistence:
+**NexusPilot: Desktop** is designed for seamless human-agent coexistence:
 - `BlockInput` is never engaged.
 - Background actions execute silently via Windows UI Automation COM patterns without stealing focus or moving the physical mouse.
-- The human user can freely use their keyboard and mouse in parallel while NexusPilot operates.
+- The human user can freely use their keyboard and mouse in parallel while **NexusPilot: Desktop** operates.

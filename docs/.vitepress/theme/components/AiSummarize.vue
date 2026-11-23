@@ -57,8 +57,8 @@ onMounted(() => {
 })
 
 const promptText = computed(() => {
-  const title = page.value.title || 'NexusPilot Documentation'
-  return `Please provide a clear, structured summary of this NexusPilot documentation page: "${title}" at ${currentUrl.value}. Focus on key features, architectural design, and developer usage instructions.`
+  const title = page.value.title || 'NexusPilot: Desktop Documentation'
+  return `Please provide a clear, structured summary of this NexusPilot: Desktop documentation page: "${title}" at ${currentUrl.value}. Focus on key features, architectural design, and developer usage instructions.`
 })
 
 const chatGptUrl = computed(() => {

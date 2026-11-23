@@ -2,7 +2,7 @@
 
 Traditional vision-only computer-use agents rely solely on raw screenshots. This approach leads to high coordinate hallucination, breaks under Windows DPI scaling (125%/150%), and incurs large token overhead.
 
-NexusPilot solves this by implementing a **dual-modal perception stream**:
+**NexusPilot: Desktop** solves this by implementing a **dual-modal perception stream**:
 
 ```mermaid
 flowchart LR
@@ -17,7 +17,7 @@ flowchart LR
 
 ## 1. The Semantic Stream (Windows UI Automation)
 
-NexusPilot interfaces with Windows `UIAutomationCore.dll` via typed COM client wrappers:
+**NexusPilot: Desktop** interfaces with Windows `UIAutomationCore.dll` via typed COM client wrappers:
 
 - **Exact Bounding Boxes**: Extracts `[x, y, width, height]` and center points directly from the operating system accessibility tree.
 - **Zero Coordinate Guessing**: The agent clicks `click_element(query="Save")` rather than estimating pixels.

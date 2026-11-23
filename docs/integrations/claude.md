@@ -1,6 +1,6 @@
 # Claude Integration (Code CLI & Desktop)
 
-NexusPilot connects seamlessly to Anthropic's Claude Code CLI and Claude Desktop on Windows.
+**NexusPilot: Desktop** connects seamlessly to Anthropic's Claude Code CLI and Claude Desktop on Windows.
 
 ---
 
@@ -41,4 +41,4 @@ Open your Claude Desktop configuration file at `%APPDATA%\Claude\claude_desktop_
 }
 ```
 
-Restart Claude Desktop. The hammer icon will display the NexusPilot desktop tools.
+Restart Claude Desktop. The hammer icon will display the **NexusPilot: Desktop** tools.

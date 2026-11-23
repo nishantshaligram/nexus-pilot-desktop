@@ -1,6 +1,6 @@
 # MCP Tools Reference
 
-Complete specification of all tools exposed by the NexusPilot MCP server.
+Complete specification of all tools exposed by the **NexusPilot: Desktop** MCP server.
 
 ---
 

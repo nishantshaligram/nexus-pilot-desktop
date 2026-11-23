@@ -1,6 +1,6 @@
 # Google Antigravity Integration
 
-NexusPilot is bundled as an official Antigravity plugin and skill.
+**NexusPilot: Desktop** is bundled as an official Antigravity plugin and skill.
 
 ---
 

@@ -1,6 +1,6 @@
 # Cursor & Windsurf Integration
 
-Configure NexusPilot inside Cursor or Windsurf IDE.
+Configure **NexusPilot: Desktop** inside Cursor or Windsurf IDE.
 
 ---
 

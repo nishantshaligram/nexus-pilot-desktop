@@ -1,6 +1,6 @@
 # Intelligent Hybrid Actuation Engine & Kinematics
 
-NexusPilot dispatches low-level mouse and keyboard events using an **Intelligent Hybrid Actuation Strategy**:
+**NexusPilot: Desktop** dispatches low-level mouse and keyboard events using an **Intelligent Hybrid Actuation Strategy**:
 - **Background Applications**: Executes silently via Windows UI Automation (UIA) COM patterns (`IUIAutomationInvokePattern`, `IUIAutomationTogglePattern`, `IUIAutomationSelectionItemPattern`, `IUIAutomationValuePattern`) or Win32 window messages. It never steals window focus and never moves the physical cursor, leaving the human user free to continue working in other applications unhindered.
 - **Focused Applications**: Glides the Visual Pilot Overlay HUD with smooth Bézier curves, morphs the cursor to a pointer hand over interactive controls, renders click ripples, and types text with human cadence and an animated I-beam cursor.
 - **Custom Canvas Fallback**: When an application renders on a custom canvas (DirectX, Electron web canvas, Flutter, game engines) where background UIA patterns are unavailable, it gracefully falls back to bringing the window to focus, gliding the visual HUD, and actuating via native Win32 `SendInput`.
@@ -11,7 +11,7 @@ NexusPilot dispatches low-level mouse and keyboard events using an **Intelligent
 
 Multi-monitor setups with varying scale factors (e.g., 4K primary at 150% and 1080p secondary at 100%) often cause coordinate drift in automation tools.
 
-NexusPilot explicitly registers **Per-Monitor DPI Awareness v2** via `SetProcessDpiAwareness(2)`:
+**NexusPilot: Desktop** explicitly registers **Per-Monitor DPI Awareness v2** via `SetProcessDpiAwareness(2)`:
 - Maps virtual screen space across all connected displays (`SM_XVIRTUALSCREEN`, `SM_YVIRTUALSCREEN`, `SM_CXVIRTUALSCREEN`, `SM_CYVIRTUALSCREEN`).
 - Normalizes pixel coordinates to Win32 absolute units ($0 \text{ to } 65535$) using `MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESK`.
 
