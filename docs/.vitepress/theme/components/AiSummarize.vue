@@ -47,7 +47,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useData } from 'vitepress'
 
 const { page } = useData()
-const currentUrl = ref('https://nishantshaligram.github.io/NexusPilot/')
+const currentUrl = ref('https://nishantshaligram.github.io/nexus-pilot-desktop/')
 const isCopied = ref(false)
 
 onMounted(() => {
@@ -100,8 +100,8 @@ const copyPrompt = async () => {
 .ai-summarize-bar {
   margin: 1.2rem 0 2rem 0;
   padding: 0.85rem 1.1rem;
-  background: rgba(14, 165, 233, 0.05);
-  border: 1px solid rgba(56, 189, 248, 0.22);
+  background: var(--vp-c-brand-soft);
+  border: 1px solid var(--vp-c-divider);
   border-radius: 12px;
   backdrop-filter: blur(8px);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
@@ -126,7 +126,7 @@ const copyPrompt = async () => {
 }
 
 .sparkle-icon {
-  color: #38bdf8;
+  color: var(--vp-c-brand-1);
   animation: pulse 2s infinite ease-in-out;
 }
 
@@ -195,13 +195,14 @@ const copyPrompt = async () => {
 }
 
 .ai-btn.copy-prompt {
-  background: rgba(56, 189, 248, 0.1);
-  border-color: rgba(56, 189, 248, 0.35);
-  color: #0284c7;
+  background: var(--vp-c-brand-soft);
+  border-color: var(--vp-c-brand-2);
+  color: var(--vp-c-brand-1);
 }
 
 .ai-btn.copy-prompt:hover {
-  background: rgba(56, 189, 248, 0.2);
+  background: var(--vp-c-brand-soft);
+  opacity: 0.85;
 }
 
 .ai-btn.copy-prompt.copied {
