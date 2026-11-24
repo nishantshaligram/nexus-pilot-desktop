@@ -6,7 +6,7 @@ hero:
   text: "Universal Desktop Computer-Use"
   tagline: "Empower AI agents with human-grade vision, mouse actuation, keyboard input, and Windows UI Automation."
   image:
-    src: /assets/brand_logo.jpg
+    src: /assets/logo.svg
     alt: "NexusPilot: Desktop Logo"
   actions:
     - theme: brand
